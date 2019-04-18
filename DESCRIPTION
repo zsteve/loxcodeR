@@ -1,11 +1,14 @@
 Package: loxcoder
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Loxcode Tools
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Authors@R: c(person("Stephen", "Zhang", email = "zhang.s@wehi.edu.au", role = c("cre", "aut")), 
+            person("Tom","Weber", email = "weber.ts@wehi.edu.au"))
+Description: 
+License: MIT
 Encoding: UTF-8
 LazyData: true
+LinkingTo: 
+    Rcpp
+Imports: 
+    Rcpp
