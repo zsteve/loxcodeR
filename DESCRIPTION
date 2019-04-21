@@ -12,3 +12,4 @@ LinkingTo:
     Rcpp
 Imports: 
     Rcpp
+RoxygenNote: 6.1.1
