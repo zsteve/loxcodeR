@@ -4,16 +4,16 @@
 \alias{decode}
 \title{Decode FASTQ}
 \usage{
-decode(prefix, dir, meta)
+decode(r, meta)
 }
 \arguments{
-\item{prefix}{Prefix of sample name}
-
-\item{dir}{Directory where FASTQ files are stored.}
+\item{r}{Paths of R1, 2 respectively}
 
 \item{meta}{User-defined data-frame for sample metadata}
 }
+\value{
+S4 loxcode_sample object with decoded results
+}
 \description{
 Recover loxcodes from raw Illumina FASTQ output
-decode() will search for samples with names of the form <prefix>_R{1, 2}_001.fastq
 }

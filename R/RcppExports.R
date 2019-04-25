@@ -4,12 +4,11 @@
 #' Decode FASTQ
 #'
 #' Recover loxcodes from raw Illumina FASTQ output
-#' decode() will search for samples with names of the form <prefix>_R{1, 2}_001.fastq
-#' @param prefix Prefix of sample name
-#' @param dir Directory where FASTQ files are stored.
+#' @param r Paths of R1, 2 respectively
 #' @param meta User-defined data-frame for sample metadata 
+#' @return S4 loxcode_sample object with decoded results
 #' @export
-decode <- function(prefix, dir, meta) {
-    .Call(`_loxcoder_decode`, prefix, dir, meta)
+decode <- function(r, meta) {
+    .Call(`_loxcoder_decode`, r, meta)
 }
 

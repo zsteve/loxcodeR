@@ -1,6 +1,5 @@
 /**
  * LoxcodeR 
- * decode method 
  */
 
 #include <Rcpp.h>
@@ -18,6 +17,8 @@
 using namespace Rcpp;
 using namespace std;
 
+// for converting from line # to read # in FASTQ 
+#define LINE_TO_READ_NUM(x) (x-1)/4 
 
 template<typename T>
 void pop_front(std::vector<T>& vec)
@@ -103,20 +104,21 @@ std::vector<string> Consensus(vector<string> a, vector<string> b)
 //' Decode FASTQ
 //'
 //' Recover loxcodes from raw Illumina FASTQ output
-//' decode() will search for samples with names of the form <prefix>_R{1, 2}_001.fastq
-//' @param prefix Prefix of sample name
-//' @param dir Directory where FASTQ files are stored.
+//' @param r Paths of R1, 2 respectively
 //' @param meta User-defined data-frame for sample metadata 
+//' @return S4 loxcode_sample object with decoded results
 //' @export
 // [[Rcpp::export]]
-Rcpp::S4 decode(std::string prefix, std::string dir, Rcpp::DataFrame meta){
-  string nR1 = dir+prefix+"_R1_001.fastq";
-  string nR2 = dir+prefix+"_R2_001.fastq";
-  ifstream fileR1(nR1); ifstream fileR2(nR2); // input files
+Rcpp::S4 decode(std::vector<std::string> r, Rcpp::DataFrame meta){
+  ifstream fileR1(r[0]); ifstream fileR2(r[1]); // input files
 
   int counter=0;
 
-  map< std::vector<string> , int > code_readout;
+  /* 
+   * code_readout.first = cassette sequence
+   * code_readout.second = line numbers in fastq files corresponding to each 
+   */ 
+  map< std::vector<string>, std::vector<int> > code_readout;
 
   int keep=0; //keep track of reads that are useful
 
@@ -126,6 +128,7 @@ Rcpp::S4 decode(std::string prefix, std::string dir, Rcpp::DataFrame meta){
   }
 
   for (int i=0; ;i++){
+    // i is the read counter (starts from zero) 
     if(fileR1.eof() || fileR2.eof()) break;
 
     std::vector<string> lines(4);
@@ -214,8 +217,10 @@ Rcpp::S4 decode(std::string prefix, std::string dir, Rcpp::DataFrame meta){
        if(r3.size()>0) // consensus gave us empty - we know read wasn't sensible bc
        {
          keep++;
-         if(code_readout.find(r3)==code_readout.end()) code_readout[r3]=1;
-         else code_readout[r3]++;
+         if(code_readout.find(r3)==code_readout.end()){
+            code_readout[r3].reserve(10); // reserve for 10 cassettes, if we need more then reallocate
+         }
+         code_readout[r3].push_back(i); 
        }
        // fs<<i<<" "<<code_readout.size()<<" "<<keep/i<<endl;
     }
@@ -225,23 +230,29 @@ Rcpp::S4 decode(std::string prefix, std::string dir, Rcpp::DataFrame meta){
   std::vector<int> output_code_sizes; output_code_sizes.reserve(code_readout.size());
   std::vector<string> output_code_readout; output_code_readout.reserve(code_readout.size());
   std::vector<int> output_code_counts; output_code_counts.reserve(code_readout.size());
+  std::vector<std::vector<int> > output_code_readids; output_code_readids.reserve(code_readout.size());
   for(auto c : code_readout){
       output_code_readout.push_back("");
       for(int i = 0; i < c.first.size(); ++i){ 
               output_code_readout.back() += c.first[i];
               if(i < c.first.size() - 1) output_code_readout.back() += " "; 
       }
-      output_code_counts.push_back(c.second);
+      output_code_counts.push_back(c.second.size());
       output_code_sizes.push_back(c.first.size() - 2);
+      output_code_readids.push_back(c.second);
   }
 
   Rcpp::DataFrame output_df = Rcpp::DataFrame::create(Named("count") = wrap(output_code_counts),
                                                       Named("code") = wrap(output_code_readout),
                                                       Named("size") = wrap(output_code_sizes));
+  Rcpp::S4 decode_output("decode_output");
+  decode_output.slot("data") = output_df;
+  decode_output.slot("read_ids") = output_code_readids;
   Rcpp::S4 output("loxcode_sample");
-  output.slot("decode") = output_df;
-  output.slot("meta") = meta;
 
+  output.slot("decode") = decode_output;
+  output.slot("meta") = meta;
+  output.slot("files") = r;
   
   fileR1.close();fileR2.close();
 
