@@ -4,12 +4,14 @@
 \alias{decode}
 \title{Decode FASTQ}
 \usage{
-decode(r, meta)
+decode(r, meta, min_r1_len = 354L, min_r2_len = 244L)
 }
 \arguments{
 \item{r}{Paths of R1, 2 respectively}
 
 \item{meta}{User-defined data-frame for sample metadata}
+
+\item{min_read_length}{min read length for R1, R2 filter respectively}
 }
 \value{
 S4 loxcode_sample object with decoded results
