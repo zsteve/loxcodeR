@@ -1,6 +1,12 @@
+*.o
+*.so
+*.dll
+src/edlib
+src/edlib/*
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
 *.fastq
 lib/*
+saturation*
