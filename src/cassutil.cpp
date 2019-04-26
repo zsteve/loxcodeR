@@ -47,6 +47,9 @@ bool is_valid_single(std::vector<int> c){
   return true;
 }
 
+//' Convert vector of cassette strings to list of numeric vectors 
+//' 
+//' @param c vector of cassette strings 
 //' @export
 // [[Rcpp::export]]
 std::vector<std::vector<int> > get_cass_vec(std::vector<std::string> c){
@@ -73,13 +76,17 @@ std::vector<bool> is_valid_impl(std::vector<std::string> c){
   return is_valid_impl(c_int);
 }
 
-
+//' Check if cassette is valid
+//'
+//' Checks that cassette is an allowed size, even and odd elements are well-positioned
+//' and that there are no repeated elements. 
+//' @param c a list of numeric vectors, or a character vector of decoded loxcodes 
+//' @return TRUE if the cassette is valid, otherwise FALSE 
 //' @export
 // [[Rcpp::export]]
 std::vector<bool> is_valid(SEXP c){
   switch(TYPEOF(c)){
-    case INTSXP:
-    case REALSXP:
+    case VECSXP:
       return is_valid_impl<std::vector<std::vector<int> > >(as<std::vector<std::vector<int> > >(c));
       break;
     case STRSXP:
@@ -88,4 +95,3 @@ std::vector<bool> is_valid(SEXP c){
   }
   return std::vector<bool>();
 }
-

@@ -16,7 +16,7 @@
 
 using namespace Rcpp;
 using namespace std;
-
+	
 template<typename T>
 void pop_front(std::vector<T>& vec)
 {

@@ -1,4 +1,1 @@
-PKG_LIBS=/home/zsteve/loxcoder/src/edlib.so
-
-all: edlib/edlib.cpp edlib/edlib.h
-	g++ --std=c++11 -c edlib/edlib.cpp -o edlib.so
+PKG_LIBS=-ledlib
