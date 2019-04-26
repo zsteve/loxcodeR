@@ -32,3 +32,12 @@ decode <- function(r, meta, min_r1_len = 354L, min_r2_len = 244L) {
     .Call(`_loxcoder_decode`, r, meta, min_r1_len, min_r2_len)
 }
 
+wrapper_fill_tables <- function() {
+    invisible(.Call(`_loxcoder_wrapper_fill_tables`))
+}
+
+#' @export
+pack <- function(c) {
+    .Call(`_loxcoder_pack`, c)
+}
+
