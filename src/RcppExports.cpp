@@ -41,6 +41,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// load_origin_files_wrapper
+void load_origin_files_wrapper(std::vector<std::string> paths);
+RcppExport SEXP _loxcoder_load_origin_files_wrapper(SEXP pathsSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type paths(pathsSEXP);
+    load_origin_files_wrapper(paths);
+    return R_NilValue;
+END_RCPP
+}
 // wrapper_fill_tables
 void wrapper_fill_tables();
 RcppExport SEXP _loxcoder_wrapper_fill_tables() {
@@ -51,13 +61,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // pack
-std::vector<long long> pack(SEXP c);
-RcppExport SEXP _loxcoder_pack(SEXP cSEXP) {
+std::vector<long long> pack(SEXP c, std::vector<bool> v);
+RcppExport SEXP _loxcoder_pack(SEXP cSEXP, SEXP vSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type c(cSEXP);
-    rcpp_result_gen = Rcpp::wrap(pack(c));
+    Rcpp::traits::input_parameter< std::vector<bool> >::type v(vSEXP);
+    rcpp_result_gen = Rcpp::wrap(pack(c, v));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -66,8 +77,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_loxcoder_get_cass_vec", (DL_FUNC) &_loxcoder_get_cass_vec, 1},
     {"_loxcoder_is_valid", (DL_FUNC) &_loxcoder_is_valid, 1},
     {"_loxcoder_decode", (DL_FUNC) &_loxcoder_decode, 4},
+    {"_loxcoder_load_origin_files_wrapper", (DL_FUNC) &_loxcoder_load_origin_files_wrapper, 1},
     {"_loxcoder_wrapper_fill_tables", (DL_FUNC) &_loxcoder_wrapper_fill_tables, 0},
-    {"_loxcoder_pack", (DL_FUNC) &_loxcoder_pack, 1},
+    {"_loxcoder_pack", (DL_FUNC) &_loxcoder_pack, 2},
     {NULL, NULL, 0}
 };
 

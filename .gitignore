@@ -10,5 +10,6 @@ src/edlib/*
 *.fastq
 lib/*
 saturation*
-other/tables_merged_all
+other/tables
+other/tables/*
 other/*.gz

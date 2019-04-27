@@ -1,1 +1,1 @@
-PKG_LIBS=-ledlib
+PKG_LIBS=-ledlib -lz

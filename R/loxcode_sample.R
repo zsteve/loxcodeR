@@ -1,3 +1,8 @@
+#' @export
+load_origin_distmaps <- function(path_13, path_9, path_7, path_5, path_3){
+  load_origin_files_wrapper(c(path_13, path_9, path_7, path_5, path_3)) 
+}
+
 #' S4 class to contain output of decode()
 #' 
 #' @slot data contains raw output of decode() as a data.frame
@@ -65,4 +70,12 @@ setGeneric("get_data", function(x){ standardGeneric("get_data") })
 #' @export
 setMethod("get_data", "loxcode_sample", function(x){ return(x@decode@data) })
 
+setGeneric("makeid", function(x){ standardGeneric("makeid") });
 
+#' Append a colum of packed cassette IDs, or -1 if it cannot be packed
+#' 
+#' @export
+setMethod("makeid", "loxcode_sample", function(x){
+  x@decode@data <- cbind(x@decode@data, data.frame(id = pack(get_data(x)$code, get_data(x)$is_valid)))
+  return(x)
+})
