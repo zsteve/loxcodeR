@@ -41,11 +41,16 @@ wrapper_fill_tables <- function() {
 }
 
 #' Pack cassettes into cassette ID
-#' 
-#' @param c a list of numeric vectors, or a character vector of decoded loxcodes 
-#' @param v vector of bool, output from validate() 
+#'
+#' @param c a list of numeric vectors, or a character vector of decoded loxcodes
+#' @param v vector of bool, output from validate()
 #' @export
 pack <- function(c, v) {
     .Call(`_loxcoder_pack`, c, v)
+}
+
+#' @export
+retrieve_dist_origin <- function(c, sizes) {
+    .Call(`_loxcoder_retrieve_dist_origin`, c, sizes)
 }
 

@@ -4,10 +4,12 @@
 \alias{pack}
 \title{Pack cassettes into cassette ID}
 \usage{
-pack(c)
+pack(c, v)
 }
 \arguments{
 \item{c}{a list of numeric vectors, or a character vector of decoded loxcodes}
+
+\item{v}{vector of bool, output from validate()}
 }
 \description{
 Pack cassettes into cassette ID

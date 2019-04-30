@@ -11,6 +11,7 @@
 #include <sstream>
 #include <tuple>
 #include <fstream>
+#include <cassert>
 #include "pack.h"
 #include "cassutil.h"
 
@@ -23,7 +24,7 @@ class distmaps{
   public:
     static ifstream* origin_files[5]; // files from the origin (organised by size_idx)
     static bool initialised;
-    
+
     static void load_origin_files(std::vector<std::string> paths){
       if(initialised){
         cerr << __FUNCTION__ << ": already initialised!" << endl;
@@ -42,10 +43,16 @@ class distmaps{
       initialised = true;
     }
 
+    static unsigned char read_origin(long long offset, int size_idx){
+      assert(size_idx < 5 && size_idx >= 0);
+      origin_files[size_idx]->seekg(offset);
+      return origin_files[size_idx]->get();
+    }
+
     ~distmaps(){
       if(initialised){
-        for(int i = 0; i < 5; i++) delete origin_files[i]; 
-        cerr << __FUNCTION__ << ": closed distance table files" << endl; 
+        for(int i = 0; i < 5; i++) delete origin_files[i];
+        cerr << __FUNCTION__ << ": closed distance table files" << endl;
         initialised = false;
       }
     }
@@ -94,7 +101,7 @@ std::vector<long long> pack_impl(std::vector<std::vector<int> > c, std::vector<b
   for(int i = 0; i < c.size(); ++i){
     if(v[i] == false){ out[i] = -1;  continue;  }
     int size_idx = get_size_idx(c[i].size());
-    if(size_idx != -1){    
+    if(size_idx != -1){
       std::tuple<std::vector<int>, std::vector<int>, std::vector<int> > p = get_oes(c[i]);
       long long packed = pack(pack_odd(&(std::get<0>(p))[0], size_idx),
                           pack_even(&(std::get<1>(p))[0], size_idx),
@@ -114,9 +121,9 @@ std::vector<long long> pack_impl(std::vector<std::string> c, std::vector<bool> v
 }
 
 //' Pack cassettes into cassette ID
-//' 
-//' @param c a list of numeric vectors, or a character vector of decoded loxcodes 
-//' @param v vector of bool, output from validate() 
+//'
+//' @param c a list of numeric vectors, or a character vector of decoded loxcodes
+//' @param v vector of bool, output from validate()
 //' @export
 // [[Rcpp::export]]
 std::vector<long long> pack(SEXP c, std::vector<bool> v){
@@ -131,7 +138,18 @@ std::vector<long long> pack(SEXP c, std::vector<bool> v){
   return std::vector<long long>();
 }
 
-std::vector<int> retrieve_dist(std::vector<long long> c){
-  // currently only for 9-element cassettes
-  
+//' @export
+// [[Rcpp::export]]
+std::vector<int> retrieve_dist_origin(std::vector<long long> c, std::vector<int> sizes){
+  std::vector<int> out(c.size());
+  for(int i = 0; i < c.size(); i++){
+    if(c[i] != -1){
+      // -1 indicates invalid cassette value. If not -1 then we assume that sizes is sensible...
+      // must first call is_valid and pack beforehand!
+      out[i] = (int)distmaps::read_origin(c[i], get_size_idx(sizes[i]))-1; // don't forget to subtract 1
+    }else{
+      out[i] = NA_INTEGER; // -1 for missing values
+    }
+  }
+  return out;
 }

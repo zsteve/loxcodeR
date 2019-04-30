@@ -72,6 +72,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// retrieve_dist_origin
+std::vector<int> retrieve_dist_origin(std::vector<long long> c, std::vector<int> sizes);
+RcppExport SEXP _loxcoder_retrieve_dist_origin(SEXP cSEXP, SEXP sizesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<long long> >::type c(cSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type sizes(sizesSEXP);
+    rcpp_result_gen = Rcpp::wrap(retrieve_dist_origin(c, sizes));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_loxcoder_get_cass_vec", (DL_FUNC) &_loxcoder_get_cass_vec, 1},
@@ -80,6 +92,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_loxcoder_load_origin_files_wrapper", (DL_FUNC) &_loxcoder_load_origin_files_wrapper, 1},
     {"_loxcoder_wrapper_fill_tables", (DL_FUNC) &_loxcoder_wrapper_fill_tables, 0},
     {"_loxcoder_pack", (DL_FUNC) &_loxcoder_pack, 2},
+    {"_loxcoder_retrieve_dist_origin", (DL_FUNC) &_loxcoder_retrieve_dist_origin, 2},
     {NULL, NULL, 0}
 };
 
