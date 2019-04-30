@@ -30,6 +30,12 @@ setClass (
   )
 )
 
+remove_existing <- function(x, n){
+  if(!any(is.na(match(n, names(x))))){
+    x <- x[, -match(n, names(x))]
+  }
+  return(x)
+}
 
 #' S4 class to represent loxcode experimental sample data
 #'
@@ -63,16 +69,17 @@ setGeneric("validate", function(x){ standardGeneric("validate") })
 #'
 #' @export
 setMethod("validate", "loxcode_sample", function(x){
+  x@decode@data <- remove_existing(x@decode@data, 'is_valid')
   x@decode@data <- cbind(x@decode@data, data.frame(is_valid = is_valid(x@decode@data$code)))
   return(x)
 })
 
-setGeneric("get_data", function(x){ standardGeneric("get_data") })
+setGeneric("data", function(x){ standardGeneric("data") })
 
 #' Access decoded cassette data
 #'
 #' @export
-setMethod("get_data", "loxcode_sample", function(x){ return(x@decode@data) })
+setMethod("data", "loxcode_sample", function(x){ return(x@decode@data) })
 
 setGeneric("makeid", function(x){ standardGeneric("makeid") });
 
@@ -80,7 +87,8 @@ setGeneric("makeid", function(x){ standardGeneric("makeid") });
 #'
 #' @export
 setMethod("makeid", "loxcode_sample", function(x){
-  x@decode@data <- cbind(x@decode@data, data.frame(id = pack(get_data(x)$code, get_data(x)$is_valid)))
+  x@decode@data <- remove_existing(x@decode@data, 'id')
+  x@decode@data <- cbind(x@decode@data, data.frame(id = pack(data(x)$code, data(x)$is_valid)))
   return(x)
 })
 
@@ -90,7 +98,8 @@ setGeneric("get_origin_dist", function(x) { standardGeneric("get_origin_dist") }
 #'
 #' @export
 setMethod("get_origin_dist", "loxcode_sample", function(x){
-  x@decode@data <- cbind(x@decode@data, data.frame(dist_orig = retrieve_dist_origin(get_data(x)$id, get_data(x)$size)))
+  x@decode@data <- remove_existing(x@decode@data, 'dist_orig')
+  x@decode@data <- cbind(x@decode@data, data.frame(dist_orig = retrieve_dist_origin(data(x)$id, data(x)$size)))
   return(x)
 })
 
@@ -99,6 +108,6 @@ setGeneric("valid", function(x){ standardGeneric("valid") })
 #'
 #' @export
 setMethod("valid", "loxcode_sample", function(x){
-  v=get_data(x);
+  v=data(x);
   return(v[v$is_valid == TRUE, ])
 })

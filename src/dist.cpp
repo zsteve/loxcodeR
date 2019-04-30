@@ -99,7 +99,7 @@ template<>
 std::vector<long long> pack_impl(std::vector<std::vector<int> > c, std::vector<bool> v){
   std::vector<long long> out(c.size());
   for(int i = 0; i < c.size(); ++i){
-    if(v[i] == false){ out[i] = -1;  continue;  }
+    if(v[i] == false){ out[i] = NA_INTEGER;  continue;  }
     int size_idx = get_size_idx(c[i].size());
     if(size_idx != -1){
       std::tuple<std::vector<int>, std::vector<int>, std::vector<int> > p = get_oes(c[i]);
@@ -108,7 +108,7 @@ std::vector<long long> pack_impl(std::vector<std::vector<int> > c, std::vector<b
                           pack_sign(&(std::get<2>(p))[0], size_idx), size_idx);
       out[i] = packed;
     }else{
-      out[i] = -1;
+      out[i] = NA_INTEGER;
     }
   }
   return out;
@@ -143,7 +143,7 @@ std::vector<long long> pack(SEXP c, std::vector<bool> v){
 std::vector<int> retrieve_dist_origin(std::vector<long long> c, std::vector<int> sizes){
   std::vector<int> out(c.size());
   for(int i = 0; i < c.size(); i++){
-    if(c[i] != -1){
+    if(c[i] != NA_INTEGER){
       // -1 indicates invalid cassette value. If not -1 then we assume that sizes is sensible...
       // must first call is_valid and pack beforehand!
       out[i] = (int)distmaps::read_origin(c[i], get_size_idx(sizes[i]))-1; // don't forget to subtract 1

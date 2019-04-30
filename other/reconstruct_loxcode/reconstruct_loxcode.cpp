@@ -125,8 +125,8 @@ int main(int argc, char* argv[])
       readFASTA(fileR2, lines);
       string R2=lines[1];
         
-     if(R1.length()<354 || R2.length()<244) continue; //this depends on sequencing run
-     
+     if(R1.length()<290 || R2.length()<244) continue; //this depends on sequencing run
+   	cout << "good read" << i << endl;  
      string start="GCTCGAATTTGCAC",end="GGATGAATTCGTGT";
      int start_loc=0,end_loc=0;
      
