@@ -36,6 +36,10 @@ load_origin_files_wrapper <- function(paths) {
     invisible(.Call(`_loxcoder_load_origin_files_wrapper`, paths))
 }
 
+load_pair_files_wrapper <- function(paths) {
+    invisible(.Call(`_loxcoder_load_pair_files_wrapper`, paths))
+}
+
 wrapper_fill_tables <- function() {
     invisible(.Call(`_loxcoder_wrapper_fill_tables`))
 }
@@ -52,5 +56,10 @@ pack <- function(c, v) {
 #' @export
 retrieve_dist_origin <- function(c, sizes) {
     .Call(`_loxcoder_retrieve_dist_origin`, c, sizes)
+}
+
+#' @export
+retrieve_dist_pair <- function(c, size) {
+    .Call(`_loxcoder_retrieve_dist_pair`, c, size)
 }
 

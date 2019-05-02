@@ -11,5 +11,9 @@ LazyData: true
 LinkingTo: 
     Rcpp
 Imports: 
-    Rcpp
+    Rcpp,
+Depends:
+    ggplot2,
+    gridExtra,
+    grid
 RoxygenNote: 6.1.1

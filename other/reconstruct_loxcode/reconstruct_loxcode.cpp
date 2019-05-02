@@ -126,7 +126,6 @@ int main(int argc, char* argv[])
       string R2=lines[1];
         
      if(R1.length()<290 || R2.length()<244) continue; //this depends on sequencing run
-   	cout << "good read" << i << endl;  
      string start="GCTCGAATTTGCAC",end="GGATGAATTCGTGT";
      int start_loc=0,end_loc=0;
      
@@ -144,7 +143,7 @@ int main(int argc, char* argv[])
       
       std::size_t loc=-1;
       
-      map<int,int> locs={{0,14},{48,8},{90,14},{138,8},{180,14},{228,8},{270,14},{318,8}};
+      map<int,int> locs={{0,14},{48,8},{90,14},{138,8},{180,14},{228,8},{270,14},/*{318,8}*/};
       
       bool discard=false, discard_R1=false, discard_R2=false;
       vector<string> loxcode_R1, loxcode_R2;

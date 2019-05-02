@@ -23,7 +23,9 @@ int size_to_size_idx[] = {-1, -1, -1, 4, -1, 3, -1, 2, -1, 1, -1, -1, -1, 0};
 class distmaps{
   public:
     static ifstream* origin_files[5]; // files from the origin (organised by size_idx)
+    static ifstream* pair_files[2]; // only supports 13 (size_idx = 0) and 9 (size_idx = 1) cassettes
     static bool initialised;
+    static bool initialised_pair;
 
     static void load_origin_files(std::vector<std::string> paths){
       if(initialised){
@@ -43,10 +45,32 @@ class distmaps{
       initialised = true;
     }
 
+    static void load_pair_files(std::vector<std::string> paths){
+      if(initialised_pair){
+        cerr << __FUNCTION__ << ": already initialised pair!" << endl;
+        Rcpp::stop("Already initialised");
+      }
+      if(paths.size() != 2){
+        cerr << __FUNCTION__ << ": paths.size() was not 2! missing some distance maps..." << endl;
+        Rcpp::stop("Missing files");
+      }
+      for(int size_idx = 0; size_idx <= 1; size_idx++){
+        distmaps::pair_files[size_idx] = new ifstream(paths[size_idx].c_str());
+        if(!distmaps::pair_files[size_idx]->is_open()){
+          cerr << __FUNCTION__ << ": WARNING: failed to open file for size_idx = " << size_idx << ", path = " << paths[size_idx] << endl;
+        }
+      }
+      initialised_pair = true;
+    }
+
     static unsigned char read_origin(long long offset, int size_idx){
       assert(size_idx < 5 && size_idx >= 0);
       origin_files[size_idx]->seekg(offset);
       return origin_files[size_idx]->get();
+    }
+
+    static unsigned char read_pair(long long c1, long long c2, int size_idx){
+      // TODO
     }
 
     ~distmaps(){
@@ -62,11 +86,14 @@ class distmaps{
 };
 
 ifstream* distmaps::origin_files[5] = {NULL};
+ifstream* distmaps::pair_files[2] = {NULL};
 bool distmaps::initialised = false;
-
+bool distmaps::initialised_pair = false;
 // [[Rcpp::export]]
 void load_origin_files_wrapper(std::vector<std::string> paths){ distmaps::load_origin_files(paths); }
 
+// [[Rcpp::export]]
+void load_pair_files_wrapper(std::vector<std::string> paths){ distmaps::load_pair_files(paths); }
 
 // [[Rcpp::export]]
 void wrapper_fill_tables(){
@@ -84,8 +111,8 @@ std::tuple<std::vector<int>, std::vector<int>, std::vector<int> > get_oes(std::v
   std::vector<int> e(k.size()/2);
   std::vector<int> s(k.size());
   for(int i = 0; i < k.size(); i++){
-     if(i % 2 == 0) o[i/2] = (k[i]-1)/2; // odd elt
-     else e[i/2] = (k[i]/2)-1;
+     if(i % 2 == 0) o[i/2] = (abs(k[i])-1)/2; // odd elt
+     else e[i/2] = (abs(k[i])/2)-1;
 
      s[i] = k[i] < 0 ? 1 : 0;
   }
@@ -152,4 +179,22 @@ std::vector<int> retrieve_dist_origin(std::vector<long long> c, std::vector<int>
     }
   }
   return out;
+}
+
+//' @export
+// [[Rcpp::export]]
+Rcpp::NumericMatrix retrieve_dist_pair(std::vector<long long> c, int size){
+  Rcpp::stop("Not done implementing");
+  if(size != 13 && size != 9){
+    // only support distance pairs for size 9 and 13
+    cerr << __FUNCTION__ << ": pairwise distance supported only for cassettes of size 13, 9" << endl;
+    Rcpp::stop("Not supported");
+  }
+  int size_idx = get_size_idx(size);
+  Rcpp::NumericMatrix out(c.size(), c.size());
+  for(int i = 0; i < c.size(); i++){
+    for(int j = i; j < c.size(); j++){
+      int dist = (int)distmaps::read_pair(c[i], c[j], size_idx)-1;
+    }
+  }
 }

@@ -7,6 +7,12 @@ load_origin_distmaps <- function(path){
                             paste(path, 4, sep = '/')))
 }
 
+#' @export
+load_pair_distmaps <- function(path){
+  load_pair_files_wrapper(c(paste(path, 0, sep = '/'),
+                            paste(path, 1, sep = '/')))
+}
+
 #' S4 class to contain output of decode()
 #'
 #' @slot data contains raw output of decode() as a data.frame
