@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include <set>
+#include <map>
 #include <sstream>
 #include <tuple>
 #include <fstream>
@@ -69,8 +70,10 @@ class distmaps{
       return origin_files[size_idx]->get();
     }
 
-    static unsigned char read_pair(long long c1, long long c2, int size_idx){
-      // TODO
+    static unsigned char read_pair(long long offset, int size_idx){
+      assert(size_idx == 0 || size_idx == 1);
+      pair_files[size_idx]->seekg(offset);
+      return pair_files[size_idx]->get();
     }
 
     ~distmaps(){
@@ -119,6 +122,14 @@ std::tuple<std::vector<int>, std::vector<int>, std::vector<int> > get_oes(std::v
   return std::make_tuple(o, e, s);
 }
 
+long long pack_single(std::vector<int> c, int size_idx){
+  std::tuple<std::vector<int>, std::vector<int>, std::vector<int> > p = get_oes(c);
+  long long packed = pack(pack_odd(&(std::get<0>(p))[0], size_idx),
+                          pack_even(&(std::get<1>(p))[0], size_idx),
+                          pack_sign(&(std::get<2>(p))[0], size_idx), size_idx);
+  return packed;
+}
+
 template<typename T>
 std::vector<long long> pack_impl(T c, std::vector<bool> v){ return std::vector<long long>(); /* DO NOT USE */ }
 
@@ -129,11 +140,7 @@ std::vector<long long> pack_impl(std::vector<std::vector<int> > c, std::vector<b
     if(v[i] == false){ out[i] = NA_INTEGER;  continue;  }
     int size_idx = get_size_idx(c[i].size());
     if(size_idx != -1){
-      std::tuple<std::vector<int>, std::vector<int>, std::vector<int> > p = get_oes(c[i]);
-      long long packed = pack(pack_odd(&(std::get<0>(p))[0], size_idx),
-                          pack_even(&(std::get<1>(p))[0], size_idx),
-                          pack_sign(&(std::get<2>(p))[0], size_idx), size_idx);
-      out[i] = packed;
+      out[i] = pack_single(c[i], size_idx);
     }else{
       out[i] = NA_INTEGER;
     }
@@ -181,10 +188,64 @@ std::vector<int> retrieve_dist_origin(std::vector<long long> c, std::vector<int>
   return out;
 }
 
+int sign(int x){ return x > 0 ? 1 : -1; }
+
+std::vector<int> transform_13(std::pair<std::vector<int>, std::vector<int> > c){
+  std::map<int, int> elt_map;
+  for(int i = 0; i < 13; i++){
+    elt_map[abs(c.first[i])] = sign(c.first[i])*(i+1);
+  }
+  std::vector<int> out(13);
+  for(int i = 0; i < 13; i++){
+    out[i] = sign(c.second[i])*elt_map[abs(c.second[i])];
+  }
+  return out;
+}
+
+std::vector<int> transform_9(std::pair<std::vector<int>, std::vector<int> > c){
+  // transform 9-element cassettes
+  // transforms first cassette to 1-9, and second cassette relative to 1-9.
+  std::map<int, int> elt_map;
+  std::set<int> unseen_elts_e = {2, 4, 6, 8, 10, 12};
+  std::set<int> unseen_elts_o = {1, 3, 5, 7, 9, 11, 13};
+  for(int i = 0; i < 9; i++){
+    elt_map[i+1] = c.first[i];
+    if((i+1) % 2 == 1){
+      // odd element
+      unseen_elts_o.erase(abs(c.first[i]));
+    }else{
+      // even element
+      unseen_elts_e.erase(abs(c.first[i]));
+    }
+  }
+  // by this point, unseen_elts contains the 4 elements not seen in c[i]
+  for(int i = 9; i < 13; i++){
+    if((i+1) % 2 == 1){
+      // odd element
+      elt_map[i+1] = *unseen_elts_o.begin();
+      unseen_elts_o.erase(unseen_elts_o.begin());
+    }else{
+      // even element
+      elt_map[i+1] = *unseen_elts_e.begin();
+      unseen_elts_e.erase(unseen_elts_e.begin());
+    }
+  }
+  // now flip map
+  std::map<int, int> rev_map;
+  for(int i = 0; i < 13; i++){
+    rev_map[abs(elt_map[i+1])] = sign(elt_map[i+1])*(i+1);
+  }
+  vector<int> out(9);
+  for(int i = 0; i < 9; i++){
+    out[i] = rev_map[abs(c.second[i])]*sign(c.second[i]);
+  }
+  return out;
+}
+
+
 //' @export
 // [[Rcpp::export]]
-Rcpp::NumericMatrix retrieve_dist_pair(std::vector<long long> c, int size){
-  Rcpp::stop("Not done implementing");
+Rcpp::NumericMatrix retrieve_dist_pair(std::vector<std::vector<int> > c, int size){
   if(size != 13 && size != 9){
     // only support distance pairs for size 9 and 13
     cerr << __FUNCTION__ << ": pairwise distance supported only for cassettes of size 13, 9" << endl;
@@ -194,7 +255,21 @@ Rcpp::NumericMatrix retrieve_dist_pair(std::vector<long long> c, int size){
   Rcpp::NumericMatrix out(c.size(), c.size());
   for(int i = 0; i < c.size(); i++){
     for(int j = i; j < c.size(); j++){
-      int dist = (int)distmaps::read_pair(c[i], c[j], size_idx)-1;
+      if(size == 13){
+        std::vector<int> x = transform_13(std::make_pair(c[i], c[j]));
+        long long x_packed = pack_single(x, 0);
+        int dist = distmaps::read_pair(x_packed, 0)-1;
+        out(i, j) = dist;
+        out(j, i) = dist;
+      }else if(size == 9){
+        std::vector<int> x = transform_9(std::make_pair(c[i], c[j]));
+        long long x_packed = pack_single(x, 1);
+        int dist = distmaps::read_pair(x_packed, 1)-1;
+        out(i, j) = dist;
+        out(j, i) = dist;
+      }
     }
   }
+  return out;
 }
+

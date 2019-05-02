@@ -5,7 +5,7 @@ src/edlib
 src/edlib/*
 .Rproj.user
 .Rhistory
-.RData
+*.RData
 .Ruserdata
 *.fastq
 lib/*

@@ -9,7 +9,7 @@ table(data(t)$is_valid) # summary of validity
 loxcoder::pack(loxcoder::get_cass_vec(data(t)$code), data(t)$is_valid)
 loxcoder::pack(data(t)$code, data(t)$is_valid)
 
-t <- loxcoder::makeid(t)
+t <- loxcoder::makeid(t)x
 
 # try loading some distance maps
 loxcoder::load_origin_distmaps('maps/origin')
@@ -25,6 +25,13 @@ a <- lapply(sizes, function(x) loxcoder::dist_orig_plot(t, x))
 # plot some nice plots ...
 grid.arrange(a[[1]], a[[2]], a[[3]], a[[4]], ncol = 1)
 
-b <- lapply(sizes, function(x) loxcoder::count_plot(t, x))
+b <- lapply(sizes, function(x) loxcoder::rank_count_plot(t, x))
 grid.arrange(b[[1]], b[[2]], b[[3]], b[[4]], ncol = 2)
 
+u <- valid(t)
+u <- u[u$size == 9, ]
+
+loxcoder::get_cass_vec(u$code) -> x
+loxcoder::retrieve_dist_pair(x[1:100], size = 9) -> m
+
+Heatmap(m, cluster_rows = F, cluster_columns = F, col = colorRamp2(c(0, 10), c("white", "red")))

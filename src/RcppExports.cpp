@@ -95,12 +95,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // retrieve_dist_pair
-Rcpp::NumericMatrix retrieve_dist_pair(std::vector<long long> c, int size);
+Rcpp::NumericMatrix retrieve_dist_pair(std::vector<std::vector<int> > c, int size);
 RcppExport SEXP _loxcoder_retrieve_dist_pair(SEXP cSEXP, SEXP sizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<long long> >::type c(cSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::vector<int> > >::type c(cSEXP);
     Rcpp::traits::input_parameter< int >::type size(sizeSEXP);
     rcpp_result_gen = Rcpp::wrap(retrieve_dist_pair(c, size));
     return rcpp_result_gen;
