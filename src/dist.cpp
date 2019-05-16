@@ -176,6 +176,9 @@ std::vector<long long> pack(SEXP c, std::vector<bool> v){
 // [[Rcpp::export]]
 std::vector<int> retrieve_dist_origin(std::vector<long long> c, std::vector<int> sizes){
   std::vector<int> out(c.size());
+  if(!distmaps::initialised){
+     Rcpp::stop("Not initialised");
+  }
   for(int i = 0; i < c.size(); i++){
     if(c[i] != NA_INTEGER){
       // -1 indicates invalid cassette value. If not -1 then we assume that sizes is sensible...

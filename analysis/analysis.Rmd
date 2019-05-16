@@ -1,6 +1,7 @@
 ```{r echo = FALSE, message = FALSE, warning = FALSE}
 library(loxcoder)
 library(ggplot2)
+library(dplyr)
 load('/home/zsteve/loxcoder/analysis/data.RData')
 ```
 
@@ -50,17 +51,21 @@ rownames(files) <- fnames_no_samp
 
 fastq_dir <- '/run/media/zsteve/ssd_ext/renamed/'
 
-files$R1 <- paste(fastq_dir, rownames(files), '_R1_001.fastq', sep = '')
-files$R2 <- paste(fastq_dir, rownames(files), '_R2_001.fastq', sep = '')
+files$R1 <- paste(fastq_dir, fnames, '_R1_001.fastq', sep = '')
+files$R2 <- paste(fastq_dir, fnames, '_R2_001.fastq', sep = '')
 
 samples <- as.list(rownames(files))
 names(samples) <- fnames_no_samp
 # samples_data <- lapply(samples, function(x){
 #       print(paste("Sample", x))
 #       loxcoder::decode(c(files[x, 'R1'], files[x, 'R2']),  
+#       name = x, 
 #       meta = data.frame(sample = x), 
 #       min_r1_len = 300, min_r2_len = 280)})
-names(samples_data) <- fnames_no_samp
+names(samples_data) <- fnames_no_samp # change names 
+
+# load read stats
+files$raw_read_count <- as.matrix(lapply(samples_data, function(x) x@decode_stats$tot_reads))
 ```
 
 ```{r}
@@ -75,6 +80,57 @@ samples_data <- lapply(samples_data, function(t){
 ```
 
 
+```{r, fig.width=15, warning = F}
+# analysis for 12k samples
+samp_12k <- fnames_no_samp[grep('12k', fnames_no_samp)]
+
+plots_correl <- lapply(samp_12k, function(x) lapply(samp_12k, function(y) loxcoder::pair_comparison_plot(samples_data[[y]], samples_data[[x]])))
+
+grid.arrange(grobs = plots_correl[[1]][1:4], nrow = 2)
+grid.arrange(grobs = plots_correl[[5]][5:8], nrow = 2)
+grid.arrange(grobs = plots_correl[[9]][9:12], nrow = 2)
+```
+```{r, fig.width = 15}
+# now look at size and distance
+
+size_plots <- lapply(samp_12k, function(x) loxcoder::size_plot(samples_data[[x]]))
+grid.arrange(grobs = size_plots)
+
+# size 9 distances
+dist_plot_9 <- lapply(samp_12k, function(x) loxcoder::dist_orig_plot(samples_data[[x]], 9))
+grid.arrange(grobs = dist_plot_9)
+
+# rank count plot
+rank_count_plot <- lapply(samp_12k, function(x) loxcoder::rank_count_plot(samples_data[[x]], 9))
+grid.arrange(grobs = rank_count_plot[5:8])
+```
+
 ```{r}
-loxcoder::pair_comparison_plot(samples_data[['12k_2_2__A']], samples_data[['12k_2_2__B']])
+sample_a <- samples_data['50k_1_2__A'][[1]]
+sample_b <- samples_data['50k_3_2__A'][[1]]
+
+loxcoder::pair_comparison_plot(sample_a, sample_b)
+
+loxcoder::valid(sample_a) %>% filter(size == 9) %>% filter(dist_orig == 6) -> sample_a_codes
+loxcoder::valid(sample_b) %>% filter(size == 9) %>% filter(dist_orig == 6) -> sample_b_codes
+
+codes_all <- c(sample_a_codes$code, sample_b_codes$code)
+codes_all_vec <- loxcoder::get_cass_vec(codes_all)
+loxcoder::retrieve_dist_pair(codes_all_vec, 9) -> m
+
+library(ComplexHeatmap)
+Heatmap(m, cluster_rows = F, cluster_columns = F)
+```
+
+```{r}
+sample_a2 <- samples_data['50k_2_2__B'][[1]]
+sample_a1 <- samples_data['50k_2_2__A'][[1]]
+rbind(loxcoder::valid(sample_a1), loxcoder::valid(sample_a2)) %>% filter(size == 9) %>% filter(dist_orig == 5) -> sample_a_codes
+# rownames(sample_a_codes) <- sample_a_codes$id
+sample_a_codes_vec <- loxcoder::get_cass_vec(sample_a_codes$code)
+loxcoder::retrieve_dist_pair(sample_a_codes_vec, 9) -> n
+rownames(n) <- sample_a_codes$dist_orig
+colnames(n) <- sample_a_codes$dist_orig
+Heatmap(n, column_names_gp = gpar(fontsize = 8), column_names_rot = 90)
+Heatmap(n, cluster_rows = F, cluster_columns = F)
 ```

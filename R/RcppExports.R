@@ -28,8 +28,8 @@ is_valid <- function(c) {
 #' @param min_read_length min read length for R1, R2 filter respectively
 #' @return S4 loxcode_sample object with decoded results
 #' @export
-decode <- function(r, meta, min_r1_len = 354L, min_r2_len = 244L) {
-    .Call(`_loxcoder_decode`, r, meta, min_r1_len, min_r2_len)
+decode <- function(r, name, meta, min_r1_len = 354L, min_r2_len = 244L) {
+    .Call(`_loxcoder_decode`, r, name, meta, min_r1_len, min_r2_len)
 }
 
 load_origin_files_wrapper <- function(paths) {

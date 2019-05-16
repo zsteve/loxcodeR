@@ -106,7 +106,7 @@ std::vector<string> Consensus(vector<string> a, vector<string> b)
 //' @return S4 loxcode_sample object with decoded results
 //' @export
 // [[Rcpp::export]]
-Rcpp::S4 decode(std::vector<std::string> r, Rcpp::DataFrame meta,
+Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame meta,
                 int min_r1_len = 354, int min_r2_len = 244){
   ifstream fileR1(r[0]); ifstream fileR2(r[1]); // input files
   int counter=0;
@@ -118,7 +118,7 @@ Rcpp::S4 decode(std::vector<std::string> r, Rcpp::DataFrame meta,
   vector<int> saturation; // track saturation
 
   int tot_reads = 0;
-  // breakdown of discarded reads 
+  // breakdown of discarded reads
   int too_small_reads = 0;
   int reads_missing_start = 0;
   int reads_missing_end = 0;
@@ -144,7 +144,7 @@ Rcpp::S4 decode(std::vector<std::string> r, Rcpp::DataFrame meta,
     string R1=lines[1];
     readFASTA(fileR2, lines);
     string R2=lines[1];
-    
+
     tot_reads++;
 
     if(R1.length()<min_r1_len || R2.length()<min_r2_len){
@@ -266,7 +266,7 @@ Rcpp::S4 decode(std::vector<std::string> r, Rcpp::DataFrame meta,
       output_code_readout.push_back("");
       for(int i = 1; i < c.first.size()-1; ++i){ // we suppress start and end
               output_code_readout.back() += c.first[i];
-	      // remove trailing ' ' - very important when converting back to integer form 
+	      // remove trailing ' ' - very important when converting back to integer form
               if(i < c.first.size()-2) output_code_readout.back() += " ";
       }
       output_code_counts.push_back(c.second.size());
@@ -285,6 +285,7 @@ Rcpp::S4 decode(std::vector<std::string> r, Rcpp::DataFrame meta,
   Rcpp::S4 output("loxcode_sample");
 
   output.slot("decode") = decode_output;
+  output.slot("name") = name;
   output.slot("meta") = meta;
   output.slot("files") = r;
 
@@ -298,8 +299,8 @@ Rcpp::S4 decode(std::vector<std::string> r, Rcpp::DataFrame meta,
   decode_stats["consensus_filtered"] = reads_consensus_filtered;
   output.slot("decode_stats") = decode_stats;
 
-  output.slot("consensus_filtered_data") = reads_consensus_filtered_data; 
+  output.slot("consensus_filtered_data") = reads_consensus_filtered_data;
   fileR1.close();fileR2.close();
-  
+
   return output;
 }

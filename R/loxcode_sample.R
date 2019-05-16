@@ -54,6 +54,7 @@ setClass (
   # Defining slot type
   representation (
     decode = "decode_output",
+    name = "character",
     meta = "data.frame",
     files = "vector",
     decode_stats = "list",
@@ -63,6 +64,7 @@ setClass (
   # Initializing slots
   prototype = list(
     decode = new("decode_output"),
+    name = '',
     meta = data.frame(),
     files = c("", ""),
     decode_stats = list(),
@@ -72,6 +74,10 @@ setClass (
 
 setMethod("length", "loxcode_sample", function(x) nrow(x@decode@data))
 setMethod("nrow", "loxcode_sample", function(x) length(x))
+
+setGeneric("name", function(x){standardGeneric("name")})
+#' @export
+setMethod("name", "loxcode_sample", function(x) x@name)
 
 setGeneric("validate", function(x){ standardGeneric("validate") })
 
