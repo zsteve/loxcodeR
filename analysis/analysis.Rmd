@@ -1,0 +1,80 @@
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+library(loxcoder)
+library(ggplot2)
+load('/home/zsteve/loxcoder/analysis/data.RData')
+```
+
+```{r}
+fnames <- c('100k_1_2___S47',
+  '100k_2_2___S1',
+  '100k_3_2___S2',
+  '12k_1_1__A_S33',
+  '12k_1_1__B_S34',
+  '12k_1_2__A_S27',
+  '12k_1_2__B_S28',
+  '12k_2_1__A_S35',
+  '12k_2_1__B_S36',
+  '12k_2_2__A_S29',
+  '12k_2_2__B_S30',
+  '12k_3_1__A_S37',
+  '12k_3_1__B_S38',
+  '12k_3_2__A_S31',
+  '12k_3_2__B_S32',
+  '25k_1_2__A_S15',
+  '25k_2_1__B_S24',
+  '25k_2_2__A_S17',
+  '25k_2_2__B_S18',
+  '25k_3_1__A_S25',
+  '25k_3_1__B_S26',
+  '25k_3_2__A_S19',
+  '50k_1_1__A_S9',
+  '50k_1_1__B_S10',
+  '50k_1_2__A_S3',
+  '50k_1_2__B_S4',
+  '50k_2_1__A_S11',
+  '50k_2_1__B_S12',
+  '50k_2_2__A_S5',
+  '50k_2_2__B_S6',
+  '50k_3_1__A_S13',
+  '50k_3_1__B_S14',
+  '50k_3_2__A_S7',
+  '50k_3_2__B_S8')
+
+fnames <- fnames[-c(1, 2, 3)]
+fnames_no_samp <- matrix(lapply(fnames, function(x) paste0(strsplit(x, split = '_S')[[1]][1])))
+
+files <-t(sapply(fnames, function(x) return(strsplit(x, split = '_')[[1]][c(1, 2, 3, 5, 6)])))
+files <- data.frame(files)
+names(files) <- c('cellcount', 'sample', 'pulse', 'rep', 'sample_n')
+rownames(files) <- fnames_no_samp
+
+fastq_dir <- '/run/media/zsteve/ssd_ext/renamed/'
+
+files$R1 <- paste(fastq_dir, rownames(files), '_R1_001.fastq', sep = '')
+files$R2 <- paste(fastq_dir, rownames(files), '_R2_001.fastq', sep = '')
+
+samples <- as.list(rownames(files))
+names(samples) <- fnames_no_samp
+# samples_data <- lapply(samples, function(x){
+#       print(paste("Sample", x))
+#       loxcoder::decode(c(files[x, 'R1'], files[x, 'R2']),  
+#       meta = data.frame(sample = x), 
+#       min_r1_len = 300, min_r2_len = 280)})
+names(samples_data) <- fnames_no_samp
+```
+
+```{r}
+loxcoder::load_origin_distmaps('/run/media/zsteve/ssd_ext/maps/origin')
+loxcoder::load_pair_distmaps('/run/media/zsteve/ssd_ext/maps/pair')
+samples_data <- lapply(samples_data, function(t){
+  t <- loxcoder::validate(t)
+  t <- loxcoder::makeid(t)
+  t <- loxcoder::get_origin_dist(t)
+  return(t)
+})
+```
+
+
+```{r}
+loxcoder::pair_comparison_plot(samples_data[['12k_2_2__A']], samples_data[['12k_2_2__B']])
+```

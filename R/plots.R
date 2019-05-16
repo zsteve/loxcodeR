@@ -4,7 +4,7 @@ setGeneric("size_plot", function(x) {standardGeneric("size_plot")})
 #'
 #' @export
 setMethod("size_plot", "loxcode_sample", function(x){
-  g <- ggplot(data = data(x)) + geom_bar(aes(as.factor(size), fill = is_valid), position = "stack", stat = 'count') + xlab('size')
+  g <- ggplot(data = data(x)) + geom_bar(aes(as.factor(size), fill = is_valid), position = "stack", stat = 'count') + xlab('size') + ylab('diversity')
   return(g)
 })
 
@@ -14,7 +14,7 @@ setMethod("dist_orig_plot", "loxcode_sample", function(x, size){
   u <- valid(x)
   u <- u[u$size == size, ]
   g <- ggplot(data = u) + geom_bar(aes(dist_orig)) + ggtitle(sprintf("size = %d", size))+ scale_x_continuous(breaks = 0:10, limits = c(0, 10)) +
-    xlab("Distance from origin")
+    xlab("Distance from origin") + ylab("Diversity")
   return(g)
 })
 
@@ -33,16 +33,37 @@ setMethod("rank_count_plot", "loxcode_sample", function(x, size){
     scale_y_continuous(sec.axis = sec_axis(~.*1/(max(log10(u$count))/max(u$dist_orig)), name = 'distance'))
 })
 
-# setGeneric("rank_dist_plot", function(x, size) {standardGeneric("rank_dist_plot")})
-#
-# #' @export
-# setMethod("rank_dist_plot", "loxcode_sample", function(x, size){
-#   u <- valid(x)
-#   u <- u[u$size == size, ]
-#   u <- u[order(u$count, decreasing = T), ]
-#   u$count <- u$count/sum(u$count) # use frequency instead of raw count
-#   ggplot(data = u) + geom_point(aes(x = 1:nrow(u), y = dist_orig)) +
-#     scale_x_log10(breaks = 1:10, labels = u$code[1:10]) +
-#     theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
-#     xlab('code') + ylab('frequency') + ggtitle(sprintf('size = %d', size))
-# })
+setGeneric("pair_comparison_plot", function(x1, x2) {standardGeneric("pair_comparison_plot")})
+#' @export
+setMethod("pair_comparison_plot", "loxcode_sample", function(x1, x2){
+  u <- get_comparison_table(x1, x2)
+  g <- ggplot(data = u) + geom_point(aes(x = 1 + rep1_count , y = 1 + rep2_count, color = as.factor(size))) +
+    scale_x_log10() + scale_y_log10() +
+    geom_abline(a = 1, b = 0)
+  return(g)
+})
+
+barcode_union <- function(rep1, rep2){
+  return(unique(c(loxcoder::data(rep1)$code, loxcoder::data(rep2)$code)))
+}
+
+get_barcode_stats_rep <- function(union_bc, rep){
+  index <- match(union_bc, loxcoder::data(rep)$code)
+  u <- loxcoder::data(rep)[index, ]
+  u$count[is.na(u$count)] <- 0
+  u$code <- union_bc
+  return(u)
+}
+
+get_comparison_table <- function(rep1, rep2){
+  bc_union <- barcode_union(rep1, rep2)
+  u1 <- get_barcode_stats_rep(bc_union, rep1)
+  u2 <- get_barcode_stats_rep(bc_union, rep2)
+  u1$size <- ifelse(is.na(u1$size), u2$size, u1$size)
+  u2$size <- u1$size
+  # scale by total number of reads
+  u1$count <- u1$count
+  u2$count <- u2$count*(sum(loxcoder::data(rep1)$count)/sum(loxcoder::data(rep2)$count))
+  return(data.frame(code = bc_union, size = u1$size, rep1_count = u1$count, rep2_count = u2$count))
+}
+

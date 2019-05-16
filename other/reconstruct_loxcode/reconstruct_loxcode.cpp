@@ -202,7 +202,11 @@ int main(int argc, char* argv[])
       
         {
             std::vector<string>r1=loxcode_R1;
-            std::vector<string>r2=loxcode_R2;  std::reverse(r2.begin(),r2.end());
+            std::vector<string>r2=loxcode_R2;
+	    for(auto i : r1) cout << i << " "; cout << endl;
+	    for(auto i : r2) cout << i << " "; cout << endl;
+	    cout << "********" << endl;
+	    std::reverse(r2.begin(),r2.end());
             std::vector<string>r3=Consensus(r1,r2);
             if(r3.size()>0) // consensus gave us empty - we know read wasn't sensible bc
             {

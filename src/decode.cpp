@@ -117,6 +117,17 @@ Rcpp::S4 decode(std::vector<std::string> r, Rcpp::DataFrame meta,
   map< std::vector<string>, std::vector<int> > code_readout;
   vector<int> saturation; // track saturation
 
+  int tot_reads = 0;
+  // breakdown of discarded reads 
+  int too_small_reads = 0;
+  int reads_missing_start = 0;
+  int reads_missing_end = 0;
+  int reads_multi_start = 0;
+  int reads_multi_end = 0;
+  int reads_consensus_filtered = 0;
+
+  std::vector<std::vector<std::string> > reads_consensus_filtered_data;
+
   int keep=0; //keep track of reads that are useful
 
   if(!fileR1.is_open() || !fileR2.is_open()){
@@ -133,19 +144,36 @@ Rcpp::S4 decode(std::vector<std::string> r, Rcpp::DataFrame meta,
     string R1=lines[1];
     readFASTA(fileR2, lines);
     string R2=lines[1];
+    
+    tot_reads++;
 
-    if(R1.length()<min_r1_len || R2.length()<min_r2_len) continue; //this depends on sequencing run
+    if(R1.length()<min_r1_len || R2.length()<min_r2_len){
+      too_small_reads++;
+      continue; //this depends on sequencing run
+    }
 
     string start="GCTCGAATTTGCAC",end="GGATGAATTCGTGT";
     int start_loc=0,end_loc=0;
     ///using edit ditance to find start (in read 1) and end (in read 2)
     EdlibAlignResult result;
     result = edlibAlign(&start[0u],start.size(),&R1[0u],R1.size(), edlibNewAlignConfig(1, EDLIB_MODE_HW,  EDLIB_TASK_LOC, NULL, 0));
-    if(result.numLocations!=1) continue;
+    if(result.numLocations == 0){
+      reads_missing_start++;
+      continue;
+    }else if(result.numLocations > 1){
+      reads_multi_start++;
+      continue;
+    }
     start_loc=result.startLocations[0];
 
     result = edlibAlign(&end[0u],end.size(),&R2[0u],R2.size(), edlibNewAlignConfig(1, EDLIB_MODE_HW,  EDLIB_TASK_LOC, NULL, 0));
-    if(result.numLocations!=1) continue;
+    if(result.numLocations == 0){
+      reads_missing_end++;
+      continue;
+    }else if(result.numLocations > 1){
+      reads_multi_end++;
+      continue;
+    }
     end_loc=result.startLocations[0];
 
     edlibFreeAlignResult(result);
@@ -175,11 +203,11 @@ Rcpp::S4 decode(std::vector<std::string> r, Rcpp::DataFrame meta,
           {
               loxcode_R1.push_back(pos.find(0)->second); //if(pos.find(0)->second=="end") break;
           }
-        else {loxcode_R1.push_back("?"); }
+        else{loxcode_R1.push_back("?"); }
       }
     }
 
-    map<int,int> locs_R2={{0,14},{48,8},{90,14},{138,8},{180,14},{228,8}};
+    map<int,int> locs_R2={{0,14},{48,8},{90,14},{138,8},{180,14},{228,8}, {270, 14}, {318, 8}};
 
     for(auto l : locs_R2){
       if(l.first+end_loc<0 || l.first+end_loc>R2.length()) {discard=true; break;}
@@ -218,6 +246,12 @@ Rcpp::S4 decode(std::vector<std::string> r, Rcpp::DataFrame meta,
             code_readout[r3].reserve(10); // reserve for 10 cassettes, if we need more then reallocate
          }
          code_readout[r3].push_back(i);
+       }else{
+          // consensus empty -- not sensible
+          std::string r1_str = ""; for(auto i : r1){r1_str+=i; r1_str+=" ";}
+          std::string r2_str = ""; for(auto i : r2){r2_str+=i; r2_str+=" ";}
+          reads_consensus_filtered_data.push_back(std::vector<std::string>({r1_str, r2_str}));
+          reads_consensus_filtered++;
        }
        saturation.push_back(keep);
     }
@@ -254,7 +288,18 @@ Rcpp::S4 decode(std::vector<std::string> r, Rcpp::DataFrame meta,
   output.slot("meta") = meta;
   output.slot("files") = r;
 
-  fileR1.close();fileR2.close();
+  Rcpp::List decode_stats;
+  decode_stats["tot_reads"] = tot_reads;
+  decode_stats["too_small"] = too_small_reads;
+  decode_stats["missing_start"] =  reads_missing_start;
+  decode_stats["multi_start"] = reads_multi_start;
+  decode_stats["missing_end"] = reads_missing_end;
+  decode_stats["multi_end"] = reads_multi_end;
+  decode_stats["consensus_filtered"] = reads_consensus_filtered;
+  output.slot("decode_stats") = decode_stats;
 
+  output.slot("consensus_filtered_data") = reads_consensus_filtered_data; 
+  fileR1.close();fileR2.close();
+  
   return output;
 }

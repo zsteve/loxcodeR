@@ -1,2 +1,3 @@
-PKG_LDFLAGS=/home/zhang.s/project_2019/edlib/build/lib
-PKG_LIBS=$(PKG_LDFLAGS)/libedlib.so
+# PKG_LDFLAGS=/home/zhang.s/project_2019/edlib/build/lib
+# PKG_LIBS=$(PKG_LDFLAGS)/libedlib.so
+PKG_LIBS=-ledlib

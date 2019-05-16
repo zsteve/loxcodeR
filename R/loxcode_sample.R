@@ -55,14 +55,18 @@ setClass (
   representation (
     decode = "decode_output",
     meta = "data.frame",
-    files = "vector"
+    files = "vector",
+    decode_stats = "list",
+    consensus_filtered_data = "vector"
   ),
 
   # Initializing slots
   prototype = list(
     decode = new("decode_output"),
     meta = data.frame(),
-    files = c("", "")
+    files = c("", ""),
+    decode_stats = list(),
+    consensus_filtered_data = c("")
   )
 )
 
