@@ -4,6 +4,7 @@ library(ggplot2)
 library(dplyr)
 library(ggbeeswarm)
 library(circlize)
+library(VennDiagram)
 # load('/home/zsteve/loxcoder/analysis/data.RData')
 
 # run this first
@@ -98,6 +99,38 @@ grid.arrange(grobs = plots_correl_12k[[1]][1:8], ncol = 4)
 grid.arrange(grobs = plots_correl_50k[[1]][1:8], ncol = 4)
 grid.arrange(grobs = plots_correl_100k[[1]][1:3], ncol = 4)
 ```
+
+```{r}
+samp_names <- c('50k_1_2__A',
+                '50k_2_2__A',
+                '50k_3_2__A')
+filter_size = 9
+samp <- as.list(samp_names)
+names(samp) <- samp_names
+samp <- lapply(samp, function(x) loxcoder::valid(samples_data[[x]]) %>% filter(size == filter_size))
+pairs <- list("n12" = c(1, 2), "n23" = c(2, 3), "n13" = c(1, 3));
+
+n_pairs <- lapply(pairs, function(x){
+  length(intersect(samp[[x[1]]]$code, samp[[x[2]]]$code))
+})
+
+n_all <- length(intersect(samp[[1]]$code, intersect(samp[[2]]$code, samp[[3]]$code)))
+
+v <- draw.triple.venn(area1 = nrow(samp[[1]]), 
+                 area2 = nrow(samp[[2]]),
+                 area3 = nrow(samp[[3]]),
+                 n12 = n_pairs$n12,
+                 n23 = n_pairs$n23,
+                 n13 = n_pairs$n13,
+                 n123 = n_all,
+                 category = samp_names, 
+                 fontfamily = rep('sans', 7), 
+                 cat.fontfamily = rep('sans', 3),
+                 fill = c('red', 'blue', 'green'))
+grid.newpage()
+grid.draw(v)
+```
+
 ```{r, fig.width = 15}
 # now look at size and distance
 samp <- samp_50k
@@ -114,6 +147,7 @@ rank_count_plot <- lapply(samp, function(x) loxcoder::rank_count_plot(samples_da
 grid.arrange(grobs = rank_count_plot, ncol = 4)
 
 swarm_plots <- lapply(samp, function(x) loxcoder::dist_count_beeswarm_plot(samples_data[[x]], 100))
+grid.arrange(grobs = swarm_plots, ncol = 4)
 ```
 
 ```{r}
