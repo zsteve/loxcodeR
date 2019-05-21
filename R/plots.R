@@ -41,7 +41,7 @@ setMethod("pair_comparison_plot", "loxcode_sample", function(x1, x2){
   u <- get_comparison_table(x1, x2)
   g <- ggplot(data = u) + geom_point(aes(y = 1 + rep1_count , x = 1 + rep2_count, color = as.factor(size))) +
     scale_x_log10() + scale_y_log10() +
-    geom_abline(a = 1, b = 0) + ylab(loxcoder::name(x1)) + xlab(loxcoder::name(x2)) +
+    geom_abline() + ylab(loxcoder::name(x1)) + xlab(loxcoder::name(x2)) +
     ggtitle(paste(loxcoder::name(x1), 'vs', loxcoder::name(x2)))
   return(g)
 })
@@ -70,3 +70,15 @@ get_comparison_table <- function(rep1, rep2){
   return(data.frame(code = bc_union, size = u1$size, rep1_count = u1$count, rep2_count = u2$count))
 }
 
+setGeneric("dist_count_beeswarm_plot", function(x, count_threshold) {standardGeneric("dist_count_beeswarm_plot")})
+#' @export
+setMethod("dist_count_beeswarm_plot", "loxcode_sample", function(x, count_threshold){
+  loxcoder::valid(x) %>% filter(count < count_threshold) -> y
+  g <- ggplot(data = y) + geom_quasirandom(width = 0.9, groupOnX = F, aes(x = dist_orig, y = size, size = count, color = count), alpha = 0.2) +
+    scale_size_area("num_reads") +
+    scale_x_continuous("distance from origin", breaks = 0:15) +
+    scale_y_continuous("size", breaks = c(3, 5, 7, 9, 13)) +
+    scale_color_gradient(low = 'blue', high = 'red') +
+    ggtitle(loxcoder::name(x))
+  return(g)
+})

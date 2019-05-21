@@ -96,14 +96,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // retrieve_dist_pair
-Rcpp::NumericMatrix retrieve_dist_pair(std::vector<std::vector<int> > c, int size);
-RcppExport SEXP _loxcoder_retrieve_dist_pair(SEXP cSEXP, SEXP sizeSEXP) {
+Rcpp::NumericMatrix retrieve_dist_pair(std::vector<std::vector<int> > c1, std::vector<std::vector<int> > c2, int size);
+RcppExport SEXP _loxcoder_retrieve_dist_pair(SEXP c1SEXP, SEXP c2SEXP, SEXP sizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<std::vector<int> > >::type c(cSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::vector<int> > >::type c1(c1SEXP);
+    Rcpp::traits::input_parameter< std::vector<std::vector<int> > >::type c2(c2SEXP);
     Rcpp::traits::input_parameter< int >::type size(sizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(retrieve_dist_pair(c, size));
+    rcpp_result_gen = Rcpp::wrap(retrieve_dist_pair(c1, c2, size));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -117,7 +118,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_loxcoder_wrapper_fill_tables", (DL_FUNC) &_loxcoder_wrapper_fill_tables, 0},
     {"_loxcoder_pack", (DL_FUNC) &_loxcoder_pack, 2},
     {"_loxcoder_retrieve_dist_origin", (DL_FUNC) &_loxcoder_retrieve_dist_origin, 2},
-    {"_loxcoder_retrieve_dist_pair", (DL_FUNC) &_loxcoder_retrieve_dist_pair, 2},
+    {"_loxcoder_retrieve_dist_pair", (DL_FUNC) &_loxcoder_retrieve_dist_pair, 3},
     {NULL, NULL, 0}
 };
 
