@@ -1,6 +1,6 @@
 # dyn.load('/home/zhang.s/project_2019/edlib/build/lib/libedlib.so')
 
-loxcoder::decode(c('/run/media/zsteve/ssd_ext/fq/0_S47_R1_001.fastq', '/run/media/zsteve/ssd_ext/fq/0_S47_R2_001.fastq'), meta = data.frame(),
+loxcoder::decode(c('/run/media/zsteve/ssd_ext/fq/0_S47_R1_001.fastq', '/run/media/zsteve/ssd_ext/fq/0_S47_R2_001.fastq'), name = 'test', meta = data.frame(),
                  min_r1_len = 300, min_r2_len = 280) -> t
 # add cassette validity information
 t <- loxcoder::validate(t)

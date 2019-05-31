@@ -5,7 +5,7 @@ library(dplyr)
 library(ggbeeswarm)
 library(circlize)
 library(VennDiagram)
-# load('/home/zsteve/loxcoder/analysis/data.RData')
+load('/home/zsteve/loxcoder/analysis/data.RData')
 
 # run this first
 loxcoder::load_origin_distmaps('/run/media/zsteve/ssd_ext/maps/origin')
@@ -107,7 +107,7 @@ samp_names <- c('50k_1_2__A',
 filter_size = 9
 samp <- as.list(samp_names)
 names(samp) <- samp_names
-samp <- lapply(samp, function(x) loxcoder::valid(samples_data[[x]]) %>% filter(size == filter_size))
+samp <- lapply(samp, function(x) loxcoder::valid(samples_data[[x]]) %>% filter(size == filter_size && dist_orig > 4))
 pairs <- list("n12" = c(1, 2), "n23" = c(2, 3), "n13" = c(1, 3));
 
 n_pairs <- lapply(pairs, function(x){
@@ -156,8 +156,8 @@ sample_b <- samples_data['50k_3_2__A'][[1]]
 
 loxcoder::pair_comparison_plot(sample_a, sample_b)
 
-loxcoder::valid(sample_a) %>% filter(size == 9 & count < 10 & dist_orig > 4) -> sample_a_codes
-loxcoder::valid(sample_b) %>% filter(size == 9 & count < 10 & dist_orig > 4) -> sample_b_codes
+loxcoder::valid(sample_a) %>% filter(size == 9 & count < 10) -> sample_a_codes
+loxcoder::valid(sample_b) %>% filter(size == 9 & count < 10) -> sample_b_codes
 
 codes_a <- loxcoder::get_cass_vec(sample_a_codes$code)
 codes_b <- loxcoder::get_cass_vec(sample_b_codes$code)
@@ -165,8 +165,12 @@ codes_b <- loxcoder::get_cass_vec(sample_b_codes$code)
 loxcoder::retrieve_dist_pair(codes_a, codes_b, 9) -> m
 
 library(ComplexHeatmap)
-Heatmap(m, cluster_rows = T, cluster_columns = T, col = colorRamp2(c(0, 5, 10), c("blue", "white", "red")),
-        row_title = 'sample A', column_title = 'sample B')
+h <- Heatmap(m, cluster_rows = T, cluster_columns = T, col = colorRamp2(c(0, max(m)/2, max(m)), c("blue", "white", "red")),
+        row_title = 'sample A', column_title = 'sample A')
+
+codes_dist <- sample_a_codes$dist_orig
+order <- column_order(h)
+ggplot() + geom_point(aes(x = order, y = codes_dist))
 ```
 
 ```{r}
@@ -190,12 +194,12 @@ Heatmap(m, cluster_rows = T, cluster_columns = T, col = colorRamp2(c(0, 5, 10), 
 ```
 
 ```{r}
-sample_a2 <- samples_data['50k_2_2__B'][[1]]
-sample_a1 <- samples_data['50k_2_2__A'][[1]]
+sample_a2 <- samples_data['50k_2_2__A'][[1]]
+sample_a1 <- samples_data['50k_1_2__A'][[1]]
 rbind(loxcoder::valid(sample_a1), loxcoder::valid(sample_a2)) %>% filter(size == 9) %>% filter(dist_orig == 5) -> sample_a_codes
 # rownames(sample_a_codes) <- sample_a_codes$id
 sample_a_codes_vec <- loxcoder::get_cass_vec(sample_a_codes$code)
-loxcoder::retrieve_dist_pair(sample_a_codes_vec, 9) -> n
+loxcoder::retrieve_dist_pair(sample_a_codes_vec, sample_a_codes_vec, 9) -> n
 rownames(n) <- sample_a_codes$dist_orig
 colnames(n) <- sample_a_codes$dist_orig
 Heatmap(n, column_names_gp = gpar(fontsize = 8), column_names_rot = 90)

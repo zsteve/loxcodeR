@@ -62,7 +62,7 @@ std::vector<string> Consensus(vector<string> a, vector<string> b)
     if(max_overlap==0)
     {
         //add special case of full length
-        if(a.size()==8 && b.size()==6 && count(a.begin(),a.end(),"?")==0 && count(b.begin(),b.end(),"?")==0)
+        if(a.size()==/*8*/6 && b.size()==6 && count(a.begin(),a.end(),"?")==0 && count(b.begin(),b.end(),"?")==0)
         {
             vector<string> full_length(a);
             full_length.push_back("?");
@@ -180,7 +180,7 @@ Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame me
 
     std::size_t loc=-1;
 
-    map<int,int> locs={{0,14},{48,8},{90,14},{138,8},{180,14},{228,8},{270,14},{318,8}};
+    map<int,int> locs={{0,14},{48,8},{90,14},{138,8},{180,14},{228,8}/*,{270,14},{318,8}*/};
 
     bool discard=false, discard_R1=false, discard_R2=false;
     vector<string> loxcode_R1, loxcode_R2;
@@ -207,7 +207,7 @@ Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame me
       }
     }
 
-    map<int,int> locs_R2={{0,14},{48,8},{90,14},{138,8},{180,14},{228,8}, {270, 14}, {318, 8}};
+    map<int,int> locs_R2={{0,14},{48,8},{90,14},{138,8},{180,14},{228,8}/*, {270, 14}, {318, 8}*/};
 
     for(auto l : locs_R2){
       if(l.first+end_loc<0 || l.first+end_loc>R2.length()) {discard=true; break;}
