@@ -62,7 +62,7 @@ std::vector<string> Consensus(vector<string> a, vector<string> b)
     if(max_overlap==0)
     {
         //add special case of full length
-        if(a.size()==/*8*/6 && b.size()==6 && count(a.begin(),a.end(),"?")==0 && count(b.begin(),b.end(),"?")==0)
+        if(a.size()==7 && b.size()==7 && count(a.begin(),a.end(),"?")==0 && count(b.begin(),b.end(),"?")==0)
         {
             vector<string> full_length(a);
             full_length.push_back("?");
@@ -107,7 +107,7 @@ std::vector<string> Consensus(vector<string> a, vector<string> b)
 //' @export
 // [[Rcpp::export]]
 Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame meta,
-                int min_r1_len = 354, int min_r2_len = 244){
+                int min_r1_len, int min_r2_len){
   ifstream fileR1(r[0]); ifstream fileR2(r[1]); // input files
   int counter=0;
   /*
@@ -155,6 +155,7 @@ Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame me
     string start="GCTCGAATTTGCAC",end="GGATGAATTCGTGT";
     int start_loc=0,end_loc=0;
     ///using edit ditance to find start (in read 1) and end (in read 2)
+    // and we allow up to a single mismatch
     EdlibAlignResult result;
     result = edlibAlign(&start[0u],start.size(),&R1[0u],R1.size(), edlibNewAlignConfig(1, EDLIB_MODE_HW,  EDLIB_TASK_LOC, NULL, 0));
     if(result.numLocations == 0){
@@ -178,18 +179,19 @@ Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame me
 
     edlibFreeAlignResult(result);
 
-    std::size_t loc=-1;
-
-    map<int,int> locs={{0,14},{48,8},{90,14},{138,8},{180,14},{228,8}/*,{270,14},{318,8}*/};
+    // TODO:  fix this so that stage1 only takes care of matching
+    // at the moment we discard if not enough elts are matched
+    //
+    map<int,int> locs={{0,14},{48,8},{90,14},{138,8},{180,14},{228,8} ,{270,14} /*,{318,8}*/};
 
     bool discard=false, discard_R1=false, discard_R2=false;
     vector<string> loxcode_R1, loxcode_R2;
 
     for(auto l : locs){
-      if(l.first+start_loc<0 || l.first+start_loc>R1.length()) {discard=true; break;}
+      if(l.first+start_loc<0 || l.first+start_loc>R1.length()) {discard=true; break;} // <-- remove this 
       string el=R1.substr(l.first+start_loc,l.second);
       auto it = ele_R1.find(el); // exact
-      if(it!=ele_R1.end()) {loxcode_R1.push_back(it->second);  continue;}
+      if(it!=ele_R1.end() && it->first.size() == l.second) {loxcode_R1.push_back(it->second);  continue;}
 
       else // can't find exact, relax and look +/- 2bp
       {
@@ -197,7 +199,9 @@ Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame me
         else el=R1.substr(l.first+start_loc,l.second);
 
         map<int,string> pos;
-        for(auto e : ele_R1) pos[(edlibAlign(&e.first[0u], e.first.size(),&el[0u], el.size(), edlibNewAlignConfig(1, EDLIB_MODE_HW,  EDLIB_TASK_DISTANCE, NULL, 0)).editDistance)]=e.second;
+        for(auto e : ele_R1){
+		if(e.first.size() == l.second) pos[(edlibAlign(&e.first[0u], e.first.size(),&el[0u], el.size(), edlibNewAlignConfig(1, EDLIB_MODE_HW,  EDLIB_TASK_DISTANCE, NULL, 0)).editDistance)]=e.second;
+	}
 
         if(pos.count(0)==1 && pos.find(0)->second!="5" && pos.find(0)->second!="-5") // 5 and -5 very close to some other sequence
           {
@@ -207,13 +211,13 @@ Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame me
       }
     }
 
-    map<int,int> locs_R2={{0,14},{48,8},{90,14},{138,8},{180,14},{228,8}/*, {270, 14}, {318, 8}*/};
+    map<int,int> locs_R2={{0,14},{48,8},{90,14},{138,8},{180,14},{228,8}, {270, 14} /*{318, 8}*/};
 
     for(auto l : locs_R2){
       if(l.first+end_loc<0 || l.first+end_loc>R2.length()) {discard=true; break;}
       string el=R2.substr(l.first+end_loc,l.second);
       auto it = ele_R2.find(el);
-      if(it!=ele_R2.end()) {loxcode_R2.push_back(it->second); continue;}
+      if(it!=ele_R2.end() && it->first.size() == l.second) {loxcode_R2.push_back(it->second); continue;}
 
       else
       {
@@ -222,7 +226,9 @@ Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame me
           el=R2.substr(l.first+end_loc,l.second);
 
         map<int,string> pos;
-        for(auto e : ele_R2) pos[(edlibAlign( &e.first[0u], e.first.size(),&el[0u], el.size(), edlibNewAlignConfig(1, EDLIB_MODE_HW,  EDLIB_TASK_DISTANCE, NULL, 0)).editDistance)]=e.second;
+        for(auto e : ele_R2){
+		if(e.first.size() == l.second) pos[(edlibAlign( &e.first[0u], e.first.size(),&el[0u], el.size(), edlibNewAlignConfig(1, EDLIB_MODE_HW,  EDLIB_TASK_DISTANCE, NULL, 0)).editDistance)]=e.second;
+	}
 
         if(pos.count(0)==1 && pos.find(0)->second!="5" && pos.find(0)->second!="-5")
           {
@@ -239,8 +245,7 @@ Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame me
        std::vector<string>r1=loxcode_R1;
        std::vector<string>r2=loxcode_R2;  std::reverse(r2.begin(),r2.end());
        std::vector<string>r3=Consensus(r1,r2);
-       if(r3.size()>0) // consensus gave us empty - we know read wasn't sensible bc
-       {
+       if(r3.size()>0){
          keep++;
          if(code_readout.find(r3)==code_readout.end()){
             code_readout[r3].reserve(10); // reserve for 10 cassettes, if we need more then reallocate

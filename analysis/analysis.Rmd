@@ -205,3 +205,39 @@ colnames(n) <- sample_a_codes$dist_orig
 Heatmap(n, column_names_gp = gpar(fontsize = 8), column_names_rot = 90)
 Heatmap(n, cluster_rows = F, cluster_columns = F)
 ```
+
+
+```{r}
+# get sample-sample matrix
+sample_50k <- samples[grep('50k', samples)]
+sample_50k_valid <- lapply(sample_50k, function(x){
+  loxcoder::valid(samples_data[[x]]) %>% filter(size == 9) -> y
+  return(loxcoder::get_cass_vec(y$code))
+})
+
+sample_50k_1pulse1_1pulse2 <- loxcoder::retrieve_dist_pair(sample_50k_valid[['50k_1_1__A']], sample_50k_valid[['50k_1_2__A']], size = 9)
+sample_50k_1pulse1_2pulse2 <- loxcoder::retrieve_dist_pair(sample_50k_valid[['50k_1_1__A']], sample_50k_valid[['50k_2_2__A']], size = 9)
+
+Heatmap(sample_50k_1pulse1_1pulse2)
+Heatmap(sample_50k_1pulse1_2pulse2)
+
+sample_50k_1pulse2_2pulse2 <- loxcoder::retrieve_dist_pair(sample_50k_valid[['50k_1_2__A']], sample_50k_valid[['50k_2_2__A']], size = 9)
+sample_50k_2pulse2a_2pulse2b <- loxcoder::retrieve_dist_pair(sample_50k_valid[['50k_2_2__A']], sample_50k_valid[['50k_2_2__B']], size = 9) 
+h <- Heatmap(sample_50k_1pulse2_2pulse2)
+h
+
+# show that the heatmap clustering tends to cluster together according to complexity
+ro <- row_order(h)
+u <- valid(samples_data[['50k_1_2__A']]) %>% filter(size == 9)
+u <- u$dist_orig
+plot(u[ro])
+
+h2 <- Heatmap(sample_50k_2pulse2a_2pulse2b)
+h2
+
+# show that the heatmap clustering tends to cluster together according to complexity
+ro2 <- row_order(h2)
+u2 <- valid(samples_data[['50k_2_2__A']]) %>% filter(size == 9)
+u2 <- u2$dist_orig
+plot(u2[ro2])
+```
