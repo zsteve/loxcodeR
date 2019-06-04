@@ -27,6 +27,29 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// impute_13_impl
+std::string impute_13_impl(std::string c2);
+RcppExport SEXP _loxcoder_impute_13_impl(SEXP c2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type c2(c2SEXP);
+    rcpp_result_gen = Rcpp::wrap(impute_13_impl(c2));
+    return rcpp_result_gen;
+END_RCPP
+}
+// impute_13
+std::vector<std::string> impute_13(std::vector<std::string> c, std::vector<int> sizes);
+RcppExport SEXP _loxcoder_impute_13(SEXP cSEXP, SEXP sizesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type c(cSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type sizes(sizesSEXP);
+    rcpp_result_gen = Rcpp::wrap(impute_13(c, sizes));
+    return rcpp_result_gen;
+END_RCPP
+}
 // decode
 Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame meta, int min_r1_len, int min_r2_len);
 RcppExport SEXP _loxcoder_decode(SEXP rSEXP, SEXP nameSEXP, SEXP metaSEXP, SEXP min_r1_lenSEXP, SEXP min_r2_lenSEXP) {
@@ -112,6 +135,8 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_loxcoder_get_cass_vec", (DL_FUNC) &_loxcoder_get_cass_vec, 1},
     {"_loxcoder_is_valid", (DL_FUNC) &_loxcoder_is_valid, 1},
+    {"_loxcoder_impute_13_impl", (DL_FUNC) &_loxcoder_impute_13_impl, 1},
+    {"_loxcoder_impute_13", (DL_FUNC) &_loxcoder_impute_13, 2},
     {"_loxcoder_decode", (DL_FUNC) &_loxcoder_decode, 5},
     {"_loxcoder_load_origin_files_wrapper", (DL_FUNC) &_loxcoder_load_origin_files_wrapper, 1},
     {"_loxcoder_load_pair_files_wrapper", (DL_FUNC) &_loxcoder_load_pair_files_wrapper, 1},

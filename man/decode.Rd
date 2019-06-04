@@ -4,7 +4,7 @@
 \alias{decode}
 \title{Decode FASTQ}
 \usage{
-decode(r, name, meta, min_r1_len = 354L, min_r2_len = 244L)
+decode(r, name, meta, min_r1_len, min_r2_len)
 }
 \arguments{
 \item{r}{Paths of R1, 2 respectively}

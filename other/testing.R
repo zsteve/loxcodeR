@@ -1,8 +1,12 @@
 # dyn.load('/home/zhang.s/project_2019/edlib/build/lib/libedlib.so')
 
+loxcoder::load_origin_distmaps('/run/media/zsteve/ssd_ext/maps/origin')
+loxcoder::load_pair_distmaps('/run/media/zsteve/ssd_ext/maps/pair')
+
 loxcoder::decode(c('/run/media/zsteve/ssd_ext/renamed/50k_1_1__B_S10_R1_001.fastq', '/run/media/zsteve/ssd_ext/renamed/50k_1_1__B_S10_R2_001.fastq'), name = 'test', meta = data.frame(),
                  min_r1_len = 300, min_r2_len = 280) -> t
 # add cassette validity information
+t <- loxcoder::impute(t)
 t <- loxcoder::validate(t)
 table(data(t)$is_valid) # summary of validity
 # we overload for multiple types of calling arguments
@@ -15,7 +19,7 @@ loxcoder::retrieve_dist_origin(data(t)$id, data(t)$size)
 
 t <- loxcoder::get_origin_dist(t)
 loxcoder::size_plot(t)
-loxcoder::dist_orig_plot(t, 9)
+loxcoder::dist_orig_plot(t, 13)
 sizes <- list(3, 5, 7, 9)
 a <- lapply(sizes, function(x) loxcoder::dist_orig_plot(t, x))
 
@@ -33,8 +37,6 @@ loxcoder::retrieve_dist_pair(x[1:10], size = 9) -> m
 
 Heatmap(m, cluster_rows = F, cluster_columns = F, col = colorRamp2(c(0, 10), c("white", "red")))
 
-loxcoder::load_origin_distmaps('/run/media/zsteve/ssd_ext/maps/origin')
-loxcoder::load_pair_distmaps('/run/media/zsteve/ssd_ext/maps/pair')
 
 # try to compare 2 samples
 files <- list(c('50k_1_1__A_S9_R1_001.fastq', '50k_1_1__A_S9_R2_001.fastq'),

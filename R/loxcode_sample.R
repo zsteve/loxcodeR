@@ -90,6 +90,16 @@ setMethod("validate", "loxcode_sample", function(x){
   return(x)
 })
 
+setGeneric("impute", function(x) {standardGeneric("impute")})
+
+#' Impute missing code in 13-element cassettes 
+#' 
+#' @export 
+setMethod("impute", "loxcode_sample", function(x){
+  x@decode@data$code <- impute_13(x@decode@data$code, x@decode@data$size)
+  return(x) 
+})
+
 setGeneric("data", function(x){ standardGeneric("data") })
 
 #' Access decoded cassette data
