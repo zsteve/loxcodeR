@@ -12,7 +12,7 @@
 #include <string>
 #include <algorithm>
 #include <assert.h>
-#include "edlib/edlib.h"
+#include "edlib.h"
 
 using namespace Rcpp;
 using namespace std;
@@ -188,7 +188,7 @@ Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame me
     vector<string> loxcode_R1, loxcode_R2;
 
     for(auto l : locs){
-      if(l.first+start_loc<0 || l.first+start_loc>R1.length()) {discard=true; break;} // <-- remove this 
+      if(l.first+start_loc<0 || l.first+start_loc>R1.length()) {discard=true; break;} // <-- remove this
       string el=R1.substr(l.first+start_loc,l.second);
       auto it = ele_R1.find(el); // exact
       if(it!=ele_R1.end() && it->first.size() == l.second) {loxcode_R1.push_back(it->second);  continue;}
