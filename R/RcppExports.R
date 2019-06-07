@@ -71,7 +71,7 @@ retrieve_dist_origin <- function(c, sizes) {
 }
 
 #' @export
-retrieve_dist_pair <- function(c1, c2, size) {
-    .Call(`_loxcoder_retrieve_dist_pair`, c1, c2, size)
+retrieve_dist_pair <- function(c1, c2) {
+    .Call(`_loxcoder_retrieve_dist_pair`, c1, c2)
 }
 

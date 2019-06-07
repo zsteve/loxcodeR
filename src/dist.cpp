@@ -245,58 +245,71 @@ std::vector<int> transform_9(std::pair<std::vector<int>, std::vector<int> > c){
   return out;
 }
 
-/*
-//' @export
-// [[Rcpp::export]]
-Rcpp::NumericMatrix retrieve_dist_pair(std::vector<std::vector<int> > c, int size){
-  if(size != 13 && size != 9){
-    // only support distance pairs for size 9 and 13
-    cerr << __FUNCTION__ << ": pairwise distance supported only for cassettes of size 13, 9" << endl;
-    Rcpp::stop("Not supported");
+std::vector<int> transform_13_9_pair(std::pair<std::vector<int>, std::vector<int> > c){
+  // first argument is a 13-elt cassette, and second argument is a 9-elt cassette
+  // transforms the 13-elt cassette to origin, and returns the corresponding 9-elt cassette
+
+  std::map<int, int> elt_map; // keys are elements of c.first, values are the corresponding elements of the transformed cassette
+  if(c.first.size() != 13 || c.second.size() != 9){
+    cerr << __FUNCTION__ << ": argument error" << endl;
+    Rcpp::stop("Argument error");
   }
-  int size_idx = get_size_idx(size);
-  Rcpp::NumericMatrix out(c.size(), c.size());
-  for(int i = 0; i < c.size(); i++){
-    for(int j = i; j < c.size(); j++){
-      if(size == 13){
-        std::vector<int> x = transform_13(std::make_pair(c[i], c[j]));
-        long long x_packed = pack_single(x, 0);
-        int dist = distmaps::read_pair(x_packed, 0)-1;
-        out(i, j) = dist;
-        out(j, i) = dist;
-      }else if(size == 9){
-        std::vector<int> x = transform_9(std::make_pair(c[i], c[j]));
-        long long x_packed = pack_single(x, 1);
-        int dist = distmaps::read_pair(x_packed, 1)-1;
-        out(i, j) = dist;
-        out(j, i) = dist;
-      }
-    }
+  for(int i = 0; i < c.first.size(); i++){
+    elt_map[abs(c.first[i])] = sign(c.first[i])*(i+1);
+  }
+  // map is now set up
+  std::vector<int> out(9);
+  for(int i = 0; i < c.second.size(); i++){
+    out[i] = elt_map[abs(c.second[i])]*sign(c.second[i]);
   }
   return out;
-}*/
+}
 
 //' @export
 // [[Rcpp::export]]
-Rcpp::NumericMatrix retrieve_dist_pair(std::vector<std::vector<int> > c1, std::vector<std::vector<int> > c2, int size){ 
-  if(size != 13 && size != 9){
+Rcpp::NumericMatrix retrieve_dist_pair(std::vector<std::vector<int> > c1, std::vector<std::vector<int> > c2){
+  /*if(size != 13 && size != 9){
     // only support distance pairs for size 9 and 13
     cerr << __FUNCTION__ << ": pairwise distance supported only for cassettes of size 13, 9" << endl;
     Rcpp::stop("Not supported");
-  }
-  int size_idx = get_size_idx(size);
+  }*/
   Rcpp::NumericMatrix out(c1.size(), c2.size());
   for(int i = 0; i < c1.size(); i++){
     for(int j = 0; j < c2.size(); j++){
-      if(size == 13){
-        std::vector<int> x = transform_13(std::make_pair(c1[i], c2[j]));
-        long long x_packed = pack_single(x, 0);
-        int dist = distmaps::read_pair(x_packed, 0)-1;
-        out(i, j) = dist;
-      }else if(size == 9){
-        std::vector<int> x = transform_9(std::make_pair(c1[i], c2[j]));
+      if(c1[i].size() == c2[j].size()){
+        // both cassettes are of the same size
+        int size = c1[i].size();
+        int size_idx = get_size_idx(size);
+        if(size == 13){
+          std::vector<int> x = transform_13(std::make_pair(c1[i], c2[j]));
+          long long x_packed = pack_single(x, 0);
+          int dist = distmaps::read_pair(x_packed, 0)-1;
+          out(i, j) = dist;
+        }else if(size == 9){
+          std::vector<int> x = transform_9(std::make_pair(c1[i], c2[j]));
+          long long x_packed = pack_single(x, 1);
+          int dist = distmaps::read_pair(x_packed, 1)-1;
+          out(i, j) = dist;
+        }else{
+          // unrecognized size
+          cerr << __FUNCTION__ << ": pairwise distance supported only for cassettes of size 13, 9" << endl;
+          Rcpp::stop("Not supported");
+        }
+      }else{
+        // not the same size
+        // handle the case where one code is 9-element and the other is 13-element
+        std::vector<int> x;
+        if(c1[i].size() == 9 && c2[j].size() == 13) x = transform_13_9_pair(std::make_pair(c2[j], c1[i]));
+        else if(c1[i].size() == 13 && c2[j].size() == 9) x = transform_13_9_pair(std::make_pair(c1[i], c2[j]));
+        else{
+          // unrecognized size
+          cerr << __FUNCTION__ << ": pairwise distance supported only for cassettes of size 13, 9" << endl;
+          Rcpp::stop("Not supported");
+        }
+
+        // now lookup
         long long x_packed = pack_single(x, 1);
-        int dist = distmaps::read_pair(x_packed, 1)-1;
+        int dist = (int)distmaps::read_origin(x_packed, 1)-1;
         out(i, j) = dist;
       }
     }

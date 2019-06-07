@@ -5,7 +5,7 @@ library(dplyr)
 library(ggbeeswarm)
 library(circlize)
 library(VennDiagram)
-load('/home/zsteve/loxcoder/analysis/data.RData')
+#load('/home/zsteve/loxcoder/analysis/data.RData')
 
 # run this first
 loxcoder::load_origin_distmaps('/run/media/zsteve/ssd_ext/maps/origin')
@@ -63,12 +63,12 @@ files$R2 <- paste(fastq_dir, fnames, '_R2_001.fastq', sep = '')
 
 samples <- as.list(rownames(files))
 names(samples) <- fnames_no_samp
-# samples_data <- lapply(samples, function(x){
-#       print(paste("Sample", x))
-#       loxcoder::decode(c(files[x, 'R1'], files[x, 'R2']),  
-#       name = x, 
-#       meta = data.frame(sample = x), 
-#       min_r1_len = 300, min_r2_len = 280)})
+samples_data <- lapply(samples, function(x){
+      print(paste("Sample", x))
+      loxcoder::decode(c(files[x, 'R1'], files[x, 'R2']),
+      name = x,
+      meta = data.frame(sample = x),
+      min_r1_len = 300, min_r2_len = 280)})
 names(samples_data) <- fnames_no_samp # change names 
 
 # load read stats
@@ -77,6 +77,7 @@ files$raw_read_count <- as.matrix(lapply(samples_data, function(x) x@decode_stat
 
 ```{r}
 samples_data <- lapply(samples_data, function(t){
+  t <- loxcoder::impute(t)
   t <- loxcoder::validate(t)
   t <- loxcoder::makeid(t)
   t <- loxcoder::get_origin_dist(t)
@@ -162,7 +163,7 @@ loxcoder::valid(sample_b) %>% filter(size == 9 & count < 10) -> sample_b_codes
 codes_a <- loxcoder::get_cass_vec(sample_a_codes$code)
 codes_b <- loxcoder::get_cass_vec(sample_b_codes$code)
 
-loxcoder::retrieve_dist_pair(codes_a, codes_b, 9) -> m
+loxcoder::retrieve_dist_pair(codes_a, codes_b) -> m
 
 library(ComplexHeatmap)
 h <- Heatmap(m, cluster_rows = T, cluster_columns = T, col = colorRamp2(c(0, max(m)/2, max(m)), c("blue", "white", "red")),
@@ -186,7 +187,7 @@ loxcoder::valid(sample_b) %>% filter(size == 9 & count < 10 & dist_orig > 6) -> 
 codes_a <- loxcoder::get_cass_vec(sample_a_codes$code)
 codes_b <- loxcoder::get_cass_vec(sample_b_codes$code)
 
-loxcoder::retrieve_dist_pair(codes_a, codes_b, 9) -> m
+loxcoder::retrieve_dist_pair(codes_a, codes_b) -> m
 
 library(ComplexHeatmap)
 Heatmap(m, cluster_rows = T, cluster_columns = T, col = colorRamp2(c(0, 5, 10), c("blue", "white", "red")),
@@ -199,7 +200,7 @@ sample_a1 <- samples_data['50k_1_2__A'][[1]]
 rbind(loxcoder::valid(sample_a1), loxcoder::valid(sample_a2)) %>% filter(size == 9) %>% filter(dist_orig == 5) -> sample_a_codes
 # rownames(sample_a_codes) <- sample_a_codes$id
 sample_a_codes_vec <- loxcoder::get_cass_vec(sample_a_codes$code)
-loxcoder::retrieve_dist_pair(sample_a_codes_vec, sample_a_codes_vec, 9) -> n
+loxcoder::retrieve_dist_pair(sample_a_codes_vec, sample_a_codes_vec) -> n
 rownames(n) <- sample_a_codes$dist_orig
 colnames(n) <- sample_a_codes$dist_orig
 Heatmap(n, column_names_gp = gpar(fontsize = 8), column_names_rot = 90)
@@ -215,14 +216,14 @@ sample_50k_valid <- lapply(sample_50k, function(x){
   return(loxcoder::get_cass_vec(y$code))
 })
 
-sample_50k_1pulse1_1pulse2 <- loxcoder::retrieve_dist_pair(sample_50k_valid[['50k_1_1__A']], sample_50k_valid[['50k_1_2__A']], size = 9)
-sample_50k_1pulse1_2pulse2 <- loxcoder::retrieve_dist_pair(sample_50k_valid[['50k_1_1__A']], sample_50k_valid[['50k_2_2__A']], size = 9)
+sample_50k_1pulse1_1pulse2 <- loxcoder::retrieve_dist_pair(sample_50k_valid[['50k_1_1__A']], sample_50k_valid[['50k_1_2__A']])
+sample_50k_1pulse1_2pulse2 <- loxcoder::retrieve_dist_pair(sample_50k_valid[['50k_1_1__A']], sample_50k_valid[['50k_2_2__A']])
 
 Heatmap(sample_50k_1pulse1_1pulse2)
 Heatmap(sample_50k_1pulse1_2pulse2)
 
-sample_50k_1pulse2_2pulse2 <- loxcoder::retrieve_dist_pair(sample_50k_valid[['50k_1_2__A']], sample_50k_valid[['50k_2_2__A']], size = 9)
-sample_50k_2pulse2a_2pulse2b <- loxcoder::retrieve_dist_pair(sample_50k_valid[['50k_2_2__A']], sample_50k_valid[['50k_2_2__B']], size = 9) 
+sample_50k_1pulse2_2pulse2 <- loxcoder::retrieve_dist_pair(sample_50k_valid[['50k_1_2__A']], sample_50k_valid[['50k_2_2__A']])
+sample_50k_2pulse2a_2pulse2b <- loxcoder::retrieve_dist_pair(sample_50k_valid[['50k_2_2__A']], sample_50k_valid[['50k_2_2__B']]) 
 h <- Heatmap(sample_50k_1pulse2_2pulse2)
 h
 
@@ -240,4 +241,28 @@ ro2 <- row_order(h2)
 u2 <- valid(samples_data[['50k_2_2__A']]) %>% filter(size == 9)
 u2 <- u2$dist_orig
 plot(u2[ro2])
+```
+```{r}
+u1 <- valid(samples_data[['12k_1_2__B']]) %>% filter(dist_orig >= 4 & count > 1 & size == 9)
+c <- loxcoder::get_cass_vec(u1$code)
+m <- loxcoder::retrieve_dist_pair(c, c)
+colnames(m) <- u1$code
+rownames(m) <- u1$code
+h <- Heatmap(m)
+ro <- row_order(h)
+co <- column_order(h)
+m <- m[ro, co]
+Heatmap(m, cluster_rows = F, cluster_columns = F)
+
+m_same <- m
+# m_diff <- m
+
+plot_me <- function(x, k, m){
+  z <- match(x, rownames(m))
+  m_temp = m;
+  m_temp[z, z] = 10
+  # Heatmap(m_temp)
+  Heatmap(m_temp[(z-k):(z+k),(z-k):(z+k)], cluster_rows = F, cluster_columns = F)
+}
+
 ```
