@@ -273,6 +273,10 @@ Rcpp::NumericMatrix retrieve_dist_pair(std::vector<std::vector<int> > c1, std::v
     cerr << __FUNCTION__ << ": pairwise distance supported only for cassettes of size 13, 9" << endl;
     Rcpp::stop("Not supported");
   }*/
+
+  if(!distmaps::initialised){
+     Rcpp::stop("Not initialised");
+  }
   Rcpp::NumericMatrix out(c1.size(), c2.size());
   for(int i = 0; i < c1.size(); i++){
     for(int j = 0; j < c2.size(); j++){

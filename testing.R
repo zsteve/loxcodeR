@@ -109,3 +109,13 @@ n$dist_orig2 <- u_both[match(n$Var2, u_both$code), c('dist_orig')]
 ggplot(data = n) + geom_tile(aes(x = Var1, y = Var2, fill = factor(value), text = paste(rownames(n), "info1 = ", dist_orig1, "info2 = ", dist_orig2))) + scale_color_discrete(guide = F)
 ggplotly()
 
+
+## Try out loxcode_experiment
+x <- loxcoder::load_from_xlsx('test_experiment',
+                              "/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/analysis/sample_test.xlsx",
+                              '/stornext/HPCScratch/home/zhang.s/project_2019/NN128_renamed/', '_R1_001.fastq', '_R2_001.fastq')
+
+x <- loxcoder::load(x)
+
+
+

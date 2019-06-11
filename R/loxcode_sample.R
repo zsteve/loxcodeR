@@ -60,7 +60,6 @@ setClass (
     decode_stats = "list",
     consensus_filtered_data = "vector"
   ),
-
   # Initializing slots
   prototype = list(
     decode = new("decode_output"),
@@ -92,21 +91,13 @@ setMethod("validate", "loxcode_sample", function(x){
 
 setGeneric("impute", function(x) {standardGeneric("impute")})
 
-#' Impute missing code in 13-element cassettes 
-#' 
-#' @export 
-setMethod("impute", "loxcode_sample", function(x){
-  x@decode@data$code <- impute_13(x@decode@data$code, x@decode@data$size)
-  return(x) 
-})
-
-setGeneric("data", function(x){ standardGeneric("data") })
-
-#' Access decoded cassette data
+#' Impute missing code in 13-element cassettes
 #'
 #' @export
-setMethod("data", "loxcode_sample", function(x){ return(x@decode@data) })
-
+setMethod("impute", "loxcode_sample", function(x){
+  x@decode@data$code <- impute_13(x@decode@data$code, x@decode@data$size)
+  return(x)
+})
 setGeneric("makeid", function(x){ standardGeneric("makeid") });
 
 #' Append a colum of packed cassette IDs, or -1 if it cannot be packed
@@ -129,7 +120,9 @@ setMethod("get_origin_dist", "loxcode_sample", function(x){
   return(x)
 })
 
+#' @export
 setGeneric("valid", function(x){ standardGeneric("valid") })
+
 #' Valid cassettes only
 #'
 #' @export
@@ -137,3 +130,12 @@ setMethod("valid", "loxcode_sample", function(x){
   v=data(x);
   return(v[v$is_valid == TRUE, ])
 })
+
+#' @export
+setGeneric("data", function(x){ standardGeneric("data") })
+
+#' Access decoded cassette data
+#'
+#' @export
+setMethod("data", "loxcode_sample", function(x){ return(x@decode@data) })
+

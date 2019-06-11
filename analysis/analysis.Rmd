@@ -79,7 +79,7 @@ files$raw_read_count <- as.matrix(lapply(samples_data, function(x) x@decode_stat
 samples_data <- lapply(samples_data, function(t){
   t <- loxcoder::impute(t)
   t <- loxcoder::validate(t)
-  t <- loxcoder::makeid(t)
+  #t <- loxcoder::makeid(t)
   t <- loxcoder::get_origin_dist(t)
   return(t)
 })

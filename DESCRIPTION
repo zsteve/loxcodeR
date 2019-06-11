@@ -15,5 +15,6 @@ Imports:
 Depends:
     ggplot2,
     gridExtra,
-    grid
+    grid,
+    readxl
 RoxygenNote: 6.1.1
