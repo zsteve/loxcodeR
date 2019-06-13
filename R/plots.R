@@ -15,7 +15,7 @@ setGeneric("dist_orig_plot", function(x, size) {standardGeneric("dist_orig_plot"
 setMethod("dist_orig_plot", "loxcode_sample", function(x, size){
   u <- valid(x)
   u <- u[u$size == size, ]
-  g <- ggplot(data = u) + geom_bar(aes(dist_orig)) + ggtitle(sprintf("size = %d", size))+ scale_x_continuous(breaks = 0:10, limits = c(0, 10)) +
+  g <- ggplot(data = u) + geom_bar(aes(x = dist_orig)) + ggtitle(sprintf("size = %d", size))+ scale_x_continuous(breaks = 0:10, limits = c(0, 10)) +
     xlab("Distance from origin") + ylab("Diversity") + ggtitle(loxcoder::name(x))
   return(g)
 })

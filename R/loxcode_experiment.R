@@ -29,8 +29,8 @@ setClass(
   )
 )
 
-setGeneric("load", function(x) {standardGeneric("load")})
-setMethod("load", "loxcode_experiment", function(x){
+setGeneric("load_samples", function(x) {standardGeneric("load_samples")})
+setMethod("load_samples", "loxcode_experiment", function(x){
     x@samples <- lapply(names(x@samples), function(z){
     print(z)
     samp_table_sliced <- x@samp_table[match(z, x@samp_table$sample), ]
@@ -103,7 +103,7 @@ load_from_xlsx <- function(name, s, dir, suffix_R1, suffix_R2, load = TRUE){
   x@samples = lapply(x@samp_table$prefix, function(z) z)
   names(x@samples) <- x@samp_table$sample
   if(load){
-    x <- loxcoder::load(x)
+    x <- loxcoder::load_samples(x)
   }
   return(x)
 }

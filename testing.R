@@ -110,12 +110,21 @@ ggplot(data = n) + geom_tile(aes(x = Var1, y = Var2, fill = factor(value), text 
 ggplotly()
 
 
+loxcoder::load_origin_distmaps('/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/maps/origin')
+loxcoder::load_pair_distmaps('/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/maps/pair')
 ## Try out loxcode_experiment
-x <- loxcoder::load_from_xlsx('test_experiment',
+x <- loxcoder::load_from_xlsx('Stephen_experiment',
                               "/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/analysis/sample_test.xlsx",
                               '/stornext/HPCScratch/home/zhang.s/project_2019/NN128_renamed/', '_R1_001.fastq', '_R2_001.fastq')
 
-x <- loxcoder::load(x)
+loxcoder::sample(x, '12k_3_1__A') # can access sample (as S4 object) like this
+loxcoder::get_valid(x, '50k_1_1__A') # or access valid codes directly as data.frame like this
+t <- loxcoder::get_valid(x, '50k_1_1__A') %>% filter(size == 9 & dist_orig > 4 & count > 1) # get codes as a data.frame
+m <- loxcoder::get_pair_dist(t, t)
 
+loxcoder::load_prob_files('/stornext/HPCScratch/home/zhang.s/project_2019/wehi-project-19/markov/out')
+s <- loxcoder::sample(x, '50k_1_1__A')
+s <- loxcoder::retrieve_prob_ensemble(s)
 
+ggplot(data = filter(valid(s), dist_orig > 0 & size == 5)) + geom_point(aes(x = 1/prob, y = count)) + geom_vline(aes(xintercept = 50000)) + scale_x_log10() + scale_y_log10()
 

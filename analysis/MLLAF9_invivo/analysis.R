@@ -1,6 +1,6 @@
 library(loxcoder)
 library(dplyr)
-
+library(ComplexHeatmap)
 load('analysis/MLLAF9_invivo/data.RData')
 
 loxcoder::load_origin_distmaps('/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/maps/origin')
@@ -13,5 +13,7 @@ loxcoder::load_pair_distmaps('/stornext/HPCScratch/home/zhang.s/project_2019/lox
 #                               suffix_R2 = '_R2_001.fastq',
 #                               load = T)
 
+t <- loxcoder::get_valid(x, "MLLAF9_tibia_L_A") %>% filter(size == 9 & dist_orig > 4 & count > 1)
+m <- loxcoder::get_pair_dist(t, t)
+
 t <- loxcoder::get_valid(x, "MLLAF9_tibia_L_A") %>% filter(size == 9)
-loxcoder::get_pair_dist(t[1:10, ], t[1:10, ])

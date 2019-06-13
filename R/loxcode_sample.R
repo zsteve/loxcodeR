@@ -13,6 +13,14 @@ load_pair_distmaps <- function(path){
                             paste(path, 1, sep = '/')))
 }
 
+#' @export
+load_prob_files <- function(path){
+  size_idx <- 0:4
+  rec_dist <- 1:15
+  l <- lapply(size_idx, function(s) sapply(rec_dist, function(r) paste(path , paste0('size_',s,'_rec',r), sep = '/')))
+  load_prob_files_wrapper(l)
+}
+
 #' S4 class to contain output of decode()
 #'
 #' @slot data contains raw output of decode() as a data.frame
@@ -117,6 +125,40 @@ setGeneric("get_origin_dist", function(x) { standardGeneric("get_origin_dist") }
 setMethod("get_origin_dist", "loxcode_sample", function(x){
   x@decode@data <- remove_existing(x@decode@data, 'dist_orig')
   x@decode@data <- cbind(x@decode@data, data.frame(dist_orig = retrieve_dist_origin(data(x)$id, data(x)$size)))
+  return(x)
+})
+
+setGeneric("get_rec_prob", function(x, size) {standardGeneric("get_rec_prob")})
+
+#' Get recombination distance distribution
+#'
+#' @export
+setMethod("get_rec_prob", "loxcode_sample", function(x, size){
+  r <- data.frame(table(valid(x)$dist_orig))
+  names(r) <- c('rec', 'prob')
+  r$prob <- r$prob/sum(r$prob)
+  r$rec <- as.numeric(r$rec)
+  return(r)
+})
+
+setGeneric("retrieve_prob_ensemble", function(x) {standardGeneric("retrieve_prob_ensemble")})
+
+#' Get generation probability using ensemble
+#'
+#' @export
+setMethod("retrieve_prob_ensemble", "loxcode_sample", function(x){
+  sizes <- unique(loxcoder::valid(x)$size)
+  x@decode@data$prob <- NA
+  for(i in sizes){ # stratify by size
+    r <- get_rec_prob(x, i)
+    mask <- (x@decode@data$is_valid == T & x@decode@data$size == i)
+    probs <- rep(0, sum(mask))
+    for(j in 1:nrow(r)){
+      print(paste('Weight: ', r$prob[j]))
+      probs <- probs + r$prob[j]*loxcoder::retrieve_prob(x@decode@data[mask, ]$id, x@decode@data[mask, ]$size, rep(r$rec[j], sum(mask)))
+    }
+    x@decode@data[mask, ]$prob <- probs
+  }
   return(x)
 })
 

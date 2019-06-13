@@ -254,12 +254,18 @@ std::vector<int> retrieve_dist_origin(std::vector<long long> c, std::vector<int>
 std::vector<float> retrieve_prob(std::vector<long long> c, std::vector<int> sizes, std::vector<int> nrec){
   std::vector<float> out(c.size());
   for(int i = 0; i < c.size(); i++){
-    if(c[i] != NA_INTEGER){
-      int size_idx = get_size_idx(sizes[i]);
-      if(distmaps::initialised_prob[size_idx][nrec[i]]){
-        out[i] = distmaps::read_prob(c[i], size_idx, nrec[i]);
+    int size_idx = get_size_idx(sizes[i]);
+    if(c[i] != NA_INTEGER && size_idx != -1 && nrec[i] >= 0 && nrec[i] <= 15){
+      if(nrec[i] == 0){
+        // special case, nrec == 0 means we are at origin
+        out[i] = 1;
       }else{
-        out[i] = R_NaN;
+        // not at origin
+        if(distmaps::initialised_prob[size_idx][nrec[i]-1]){ /* subtract 1 because we are indexing */
+          out[i] = distmaps::read_prob(c[i], size_idx, nrec[i]-1);
+        }else{
+          out[i] = R_NaN;
+        }
       }
     }else{
       out[i] = R_NaN;
