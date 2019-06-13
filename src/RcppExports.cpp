@@ -85,6 +85,16 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// load_prob_files_wrapper
+void load_prob_files_wrapper(std::vector<std::vector<std::string> > paths);
+RcppExport SEXP _loxcoder_load_prob_files_wrapper(SEXP pathsSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<std::vector<std::string> > >::type paths(pathsSEXP);
+    load_prob_files_wrapper(paths);
+    return R_NilValue;
+END_RCPP
+}
 // wrapper_fill_tables
 void wrapper_fill_tables();
 RcppExport SEXP _loxcoder_wrapper_fill_tables() {
@@ -118,6 +128,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// retrieve_prob
+std::vector<float> retrieve_prob(std::vector<long long> c, std::vector<int> sizes, std::vector<int> nrec);
+RcppExport SEXP _loxcoder_retrieve_prob(SEXP cSEXP, SEXP sizesSEXP, SEXP nrecSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<long long> >::type c(cSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type sizes(sizesSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type nrec(nrecSEXP);
+    rcpp_result_gen = Rcpp::wrap(retrieve_prob(c, sizes, nrec));
+    return rcpp_result_gen;
+END_RCPP
+}
 // retrieve_dist_pair
 Rcpp::NumericMatrix retrieve_dist_pair(std::vector<std::vector<int> > c1, std::vector<std::vector<int> > c2);
 RcppExport SEXP _loxcoder_retrieve_dist_pair(SEXP c1SEXP, SEXP c2SEXP) {
@@ -139,9 +162,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_loxcoder_decode", (DL_FUNC) &_loxcoder_decode, 5},
     {"_loxcoder_load_origin_files_wrapper", (DL_FUNC) &_loxcoder_load_origin_files_wrapper, 1},
     {"_loxcoder_load_pair_files_wrapper", (DL_FUNC) &_loxcoder_load_pair_files_wrapper, 1},
+    {"_loxcoder_load_prob_files_wrapper", (DL_FUNC) &_loxcoder_load_prob_files_wrapper, 1},
     {"_loxcoder_wrapper_fill_tables", (DL_FUNC) &_loxcoder_wrapper_fill_tables, 0},
     {"_loxcoder_pack", (DL_FUNC) &_loxcoder_pack, 2},
     {"_loxcoder_retrieve_dist_origin", (DL_FUNC) &_loxcoder_retrieve_dist_origin, 2},
+    {"_loxcoder_retrieve_prob", (DL_FUNC) &_loxcoder_retrieve_prob, 3},
     {"_loxcoder_retrieve_dist_pair", (DL_FUNC) &_loxcoder_retrieve_dist_pair, 2},
     {NULL, NULL, 0}
 };

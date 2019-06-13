@@ -16,6 +16,9 @@
 #include "pack.h"
 #include "cassutil.h"
 
+#define REC_MAX 15
+#define FLOAT_SIZE 4
+
 using namespace Rcpp;
 
 // oooo global variables :(((
@@ -25,8 +28,13 @@ class distmaps{
   public:
     static ifstream* origin_files[5]; // files from the origin (organised by size_idx)
     static ifstream* pair_files[2]; // only supports 13 (size_idx = 0) and 9 (size_idx = 1) cassettes
+    // probability of generation, first index specifies the size_idx and second
+    // index specifies the recombination number.
+    static ifstream* prob_files[5][15];
+
     static bool initialised;
     static bool initialised_pair;
+    static bool initialised_prob[5][15];
 
     static void load_origin_files(std::vector<std::string> paths){
       if(initialised){
@@ -64,16 +72,56 @@ class distmaps{
       initialised_pair = true;
     }
 
+    static void load_prob_files(std::vector<std::vector<std::string> >  paths){
+      // paths[i][j] specifies the table for size_idx i and rec_idx j
+      if(paths.size() != 5){
+        cerr << __FUNCTION__ << ": paths.size() inappropriate! missing some probability tables..." << endl;
+        Rcpp::stop("Missing files");
+      }
+      for(int size_idx = 0; size_idx < 5; size_idx++){
+        for(int n_rec = 0; n_rec < REC_MAX; n_rec++){
+          if(paths[size_idx].size() <= n_rec){
+            // skip this table
+            prob_files[size_idx][n_rec] = NULL;
+            initialised_prob[size_idx][n_rec] = false;
+          }else{
+            // otherwise load as usual
+            distmaps::prob_files[size_idx][n_rec] = new ifstream(paths[size_idx][n_rec].c_str());
+            if(!distmaps::prob_files[size_idx][n_rec]->is_open()){
+              initialised_prob[size_idx][n_rec] = false;
+              cout << "table: size_idx = " << size_idx << " n_rec = " << n_rec << " skipped" << endl;
+            }else{
+              initialised_prob[size_idx][n_rec] = true;
+              cout << "table: size_idx = " << size_idx << " n_rec = " << n_rec << " loaded" << endl;
+            }
+          }
+        }
+      }
+
+    }
+
     static unsigned char read_origin(long long offset, int size_idx){
       assert(size_idx < 5 && size_idx >= 0);
+      assert(initialised);
       origin_files[size_idx]->seekg(offset);
       return origin_files[size_idx]->get();
     }
 
     static unsigned char read_pair(long long offset, int size_idx){
       assert(size_idx == 0 || size_idx == 1);
+      assert(initialised_pair);
       pair_files[size_idx]->seekg(offset);
       return pair_files[size_idx]->get();
+    }
+
+    static float read_prob(long long offset, int size_idx, int rec_idx){
+      assert(size_idx <= 5 && size_idx >= 0);
+      assert(initialised_prob[size_idx][rec_idx]);
+      float retv = 0;
+      assert(sizeof(retv) == FLOAT_SIZE); // kind of important
+      prob_files[size_idx][rec_idx]->seekg(offset*FLOAT_SIZE);
+      prob_files[size_idx][rec_idx]->read((char*)&retv, FLOAT_SIZE);
+      return retv;
     }
 
     ~distmaps(){
@@ -90,13 +138,23 @@ class distmaps{
 
 ifstream* distmaps::origin_files[5] = {NULL};
 ifstream* distmaps::pair_files[2] = {NULL};
+ifstream* distmaps::prob_files[5][15] = {NULL};
+
+
 bool distmaps::initialised = false;
 bool distmaps::initialised_pair = false;
+bool distmaps::initialised_prob[5][15] = {{false}};
+
+
+
 // [[Rcpp::export]]
 void load_origin_files_wrapper(std::vector<std::string> paths){ distmaps::load_origin_files(paths); }
 
 // [[Rcpp::export]]
 void load_pair_files_wrapper(std::vector<std::string> paths){ distmaps::load_pair_files(paths); }
+
+// [[Rcpp::export]]
+void load_prob_files_wrapper(std::vector<std::vector<std::string> > paths){ distmaps::load_prob_files(paths); }
 
 // [[Rcpp::export]]
 void wrapper_fill_tables(){
@@ -186,6 +244,25 @@ std::vector<int> retrieve_dist_origin(std::vector<long long> c, std::vector<int>
       out[i] = (int)distmaps::read_origin(c[i], get_size_idx(sizes[i]))-1; // don't forget to subtract 1
     }else{
       out[i] = NA_INTEGER; // -1 for missing values
+    }
+  }
+  return out;
+}
+
+//' @export
+// [[Rcpp::export]]
+std::vector<float> retrieve_prob(std::vector<long long> c, std::vector<int> sizes, std::vector<int> nrec){
+  std::vector<float> out(c.size());
+  for(int i = 0; i < c.size(); i++){
+    if(c[i] != NA_INTEGER){
+      int size_idx = get_size_idx(sizes[i]);
+      if(distmaps::initialised_prob[size_idx][nrec[i]]){
+        out[i] = distmaps::read_prob(c[i], size_idx, nrec[i]);
+      }else{
+        out[i] = R_NaN;
+      }
+    }else{
+      out[i] = R_NaN;
     }
   }
   return out;
