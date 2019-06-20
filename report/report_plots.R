@@ -265,9 +265,9 @@ ggplot(data = mds_points) + geom_point(aes(x = x, y = y, color = factor(sample))
 
 samples <- x@samp_table$sample
 samples <- samples[grep('50k', samples)]
-m <- filter(loxcoder::get_valid(x, samples[1]), dist_orig > 4 & count > 1)
+m <- filter(loxcoder::get_valid(x, samples[1]), dist_orig >= 4 & count > 1)
 for(i in samples[-1]){
-  m <- merge(m, filter(loxcoder::get_valid(x, i), dist_orig > 4 & count > 1), by = c('code', 'dist_orig', 'size', 'id', 'is_valid'), all = T)
+  m <- merge(m, filter(loxcoder::get_valid(x, i), dist_orig >= 4 & count > 1), by = c('code', 'dist_orig', 'size', 'id', 'is_valid'), all = T)
 }
 rownames(m) <- m$code
 m <- m[, grepl('count', names(m))]
