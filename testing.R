@@ -123,8 +123,41 @@ t <- loxcoder::get_valid(x, '50k_1_1__A') %>% filter(size == 9 & dist_orig > 4 &
 m <- loxcoder::get_pair_dist(t, t)
 
 loxcoder::load_prob_files('/stornext/HPCScratch/home/zhang.s/project_2019/wehi-project-19/markov/out')
-s <- loxcoder::sample(x, '50k_1_1__A')
-s <- loxcoder::retrieve_prob_ensemble(s)
+s <- loxcoder::sample(x, '50k_3_1__B')
+# s <- loxcoder::retrieve_prob_ensemble(s)
+t <- loxcoder::valid(s) %>% filter(size == 9 & dist_orig == 4)
+p <- loxcoder::retrieve_prob(t$id, t$size, t$dist_orig)
+t$prob <- p/sum(p)
+t$empirical_prob <- t$count/sum(t$count)
+
+ggplot(data = t) + geom_point(aes(x = -log10(prob), y = count))
 
 ggplot(data = filter(valid(s), dist_orig > 0 & size == 5)) + geom_point(aes(x = 1/prob, y = count)) + geom_vline(aes(xintercept = 50000)) + scale_x_log10() + scale_y_log10()
 
+## see if empirical probabilities for common barcodes tend to correlate together
+
+s <- lapply(list('100k_1_2', '100k_2_2'), function(y){ return(loxcoder::sample(x, y)) })
+t <- lapply(s, function(x){ return(loxcoder::valid(x) %>% filter(size == 9 & dist_orig == 4)) })
+t <- lapply(t, function(x){
+  x$prob <- loxcoder::retrieve_prob(x$id, x$size, x$dist_orig)
+  x$prob <- x$prob
+  x$empirical_prob <- x$count/sum(x$count)
+  return(x)
+})
+
+common_ids <- intersect(t[[1]]$id, t[[2]]$id)
+t_common <- lapply(t, function(x){
+  x <- x[x$id %in% common_ids, ]
+  x <- x[order(x$id), ]
+  x$prob <- x$prob/(sum(x$prob))
+  x$empirical_prob <- x$empirical_prob/(sum(x$empirical_prob))
+  return(x)
+})
+
+ggplot() + geom_point(aes(x = -log10(t_common[[1]]$empirical_prob), y = -log10(t_common[[2]]$empirical_prob))) +
+  geom_abline(aes(slope = 1, intercept = 0), color = 'red') + xlim(1, 5) + ylim(1, 5)
+
+ggplot() + geom_point(aes(x = -log10(t_common[[1]]$empirical_prob), y = -log10(t_common[[1]]$prob))) +
+  geom_abline(aes(slope = 1, intercept = 0), color = 'red') + xlim(1, 5) + ylim(1, 5)
+
+ggplot(data = t[[1]]) + geom_point(aes(x = -log10(prob), y = log10(count)))

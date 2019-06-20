@@ -15,33 +15,41 @@ setGeneric("dist_orig_plot", function(x, size) {standardGeneric("dist_orig_plot"
 setMethod("dist_orig_plot", "loxcode_sample", function(x, size){
   u <- valid(x)
   u <- u[u$size == size, ]
-  g <- ggplot(data = u) + geom_bar(aes(x = dist_orig)) + ggtitle(sprintf("size = %d", size))+ scale_x_continuous(breaks = 0:10, limits = c(0, 10)) +
-    xlab("Distance from origin") + ylab("Diversity") + ggtitle(loxcoder::name(x))
+  fill_scale <- scale_fill_manual(breaks = 0:15, values = c(viridis(8), viridis(8))) # use twice since gradient is hard to see otherwise
+  g <- ggplot(data = u) + geom_bar(aes(x = dist_orig, fill = factor(dist_orig)), show.legend = F) + ggtitle(sprintf("size = %d", size))+ scale_x_continuous(breaks = 0:10, limits = c(0, 10)) +
+    xlab("Distance from origin") + ylab("Diversity") + ggtitle(loxcoder::name(x)) + fill_scale
   return(g)
 })
 
-setGeneric("rank_count_plot", function(x, size) {standardGeneric("rank_count_plot")})
+setGeneric("rank_count_plot", function(x, size, ymax, dmax) {standardGeneric("rank_count_plot")})
 #' @export
-setMethod("rank_count_plot", "loxcode_sample", function(x, size){
+setMethod("rank_count_plot", "loxcode_sample", function(x, size, ymax, dmax){
   u <- valid(x)
   u <- u[u$size == size, ]
   u <- u[order(u$count, decreasing = T), ]
   # u$count <- u$count/sum(u$count) # use frequency instead of raw count
   ggplot(data = u) + geom_point(aes(x = 1:nrow(u), y = log10(count))) +
+    geom_point(aes(x = 1:nrow(u), y = dist_orig*ymax/dmax), color = 'red') +
     scale_x_log10(breaks = 1:10, labels = u$code[1:10]) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
-    xlab('code') + ylab('log10(count)') + ggtitle(sprintf('%s; size = %d', loxcoder::name(x), size)) +
-    geom_point(aes(x = 1:nrow(u), y = dist_orig*max(log10(count))/max(dist_orig)), color = 'red', alpha = 0.1) +
-    scale_y_continuous(sec.axis = sec_axis(~.*1/(max(log10(u$count))/max(u$dist_orig)), name = 'distance'))
+    xlab('code') + ylab('log10(count)') +
+    ggtitle(sprintf('%s; size = %d', loxcoder::name(x), size)) +
+    scale_y_continuous(limits = c(0, ymax), sec.axis = sec_axis(~.*(dmax/ymax), name = 'distance'))
 })
 
 setGeneric("pair_comparison_plot", function(x1, x2) {standardGeneric("pair_comparison_plot")})
 #' @export
 setMethod("pair_comparison_plot", "loxcode_sample", function(x1, x2){
   u <- get_comparison_table(x1, x2)
-  g <- ggplot(data = u) + geom_point(aes(y = 1 + rep1_count , x = 1 + rep2_count, color = as.factor(size))) +
-    scale_x_log10() + scale_y_log10() +
-    geom_abline() + ylab(loxcoder::name(x1)) + xlab(loxcoder::name(x2)) +
+  nonzero_mask <- (u$rep1_count > 0 & u$rep2_count > 0)
+  rep1_zero_mask <- (u$rep1_count == 0)
+  rep2_zero_mask <- (u$rep2_count == 0)
+  g <- ggplot() +
+    geom_point(aes(y = log10(1 + u$rep1_count[nonzero_mask]) , x = log10(1 + u$rep2_count[nonzero_mask]),
+              color = as.factor(u$size[nonzero_mask])), alpha = 0.25) +
+    geom_quasirandom(aes(y = rep(-0.2, sum(rep1_zero_mask)), x = log10(1 + u$rep2_count[rep1_zero_mask]), color = factor(-1)), groupOnX = F, width = 0.2, alpha = 0.25) +
+    geom_quasirandom(aes(y = log10(1 + u$rep1_count[rep2_zero_mask]), x = rep(-0.2, sum(rep2_zero_mask)), color = factor(-1)), groupOnX = T, width = 0.2, alpha = 0.25) +
+    geom_abline() + ylab(paste('log10(reads in ', loxcoder::name(x1), ')')) + xlab(paste('log10(reads in ', loxcoder::name(x2), ')')) +
     ggtitle(paste(loxcoder::name(x1), 'vs', loxcoder::name(x2)))
   return(g)
 })

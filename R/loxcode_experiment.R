@@ -108,4 +108,42 @@ load_from_xlsx <- function(name, s, dir, suffix_R1, suffix_R2, load = TRUE){
   return(x)
 }
 
+#' @export
+setGeneric("venn_3way", function(x, a, b, c, size_range, dist_range, ...){standardGeneric("venn_3way")})
 
+setMethod("venn_3way", "loxcode_experiment", function(x, a, b, c, size_range, dist_range, labels = NA){
+  samp_names <- c(a, b, c)
+  samp <- as.list(samp_names)
+  names(samp) <- samp_names
+
+  if(!is.na(labels)){
+    samp_names <- labels
+  }
+
+  samp <- lapply(samp, function(s){ return(loxcoder::get_valid(x, s) %>%
+                                             filter(size >= size_range[1] &
+                                                      size <= size_range[2] &
+                                                      dist_orig >= dist_range[1] &
+                                                      dist_orig <= dist_range[2]))} )
+
+  pairs <- list("n12" = c(1, 2), "n23" = c(2, 3), "n13" = c(1, 3));
+
+  n_pairs <- lapply(pairs, function(x){
+    length(intersect(samp[[x[1]]]$code, samp[[x[2]]]$code))
+  })
+
+  n_all <- length(intersect(samp[[1]]$code, intersect(samp[[2]]$code, samp[[3]]$code)))
+
+  v <- draw.triple.venn(area1 = nrow(samp[[1]]),
+                   area2 = nrow(samp[[2]]),
+                   area3 = nrow(samp[[3]]),
+                   n12 = n_pairs$n12,
+                   n23 = n_pairs$n23,
+                   n13 = n_pairs$n13,
+                   n123 = n_all,
+                   category = samp_names,
+                   fontfamily = rep('sans', 7),
+                   cat.fontfamily = rep('sans', 3),
+                   fill = c('red', 'blue', 'green'))
+  return(grobTree(children = v))
+})
