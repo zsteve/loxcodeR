@@ -10,11 +10,11 @@ library(heatmap3)
 
 # also load merged files
 
-loxcoder::load_origin_distmaps('/run/media/zsteve/ssd_ext/maps/origin')
-loxcoder::load_pair_distmaps('/run/media/zsteve/ssd_ext/maps/pair')
+# loxcoder::load_origin_distmaps('/run/media/zsteve/ssd_ext/maps/origin')
+# loxcoder::load_pair_distmaps('/run/media/zsteve/ssd_ext/maps/pair')
 
-# loxcoder::load_origin_distmaps('/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/maps/origin')
-# loxcoder::load_pair_distmaps('/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/maps/pair')
+loxcoder::load_origin_distmaps('/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/maps/origin')
+loxcoder::load_pair_distmaps('/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/maps/pair')
 loxcoder::load_prob_files('/stornext/HPCScratch/home/zhang.s/project_2019/wehi-project-19/markov/out')
 
 # setwd('/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/analysis')
@@ -389,3 +389,18 @@ heatmap3(n, Rowv = NA, Colv = NA, scale = 'none', col = viridis(130, direction =
 
 t <- loxcoder::get_valid(x_merged, '50k_1_2') %>% filter(size == 9, dist_orig >= 3)
 m <- loxcoder::get_pair_dist(t, t)
+
+
+# probability plots
+t <- loxcoder::get_valid(x_merged, '50k_1_2')
+s <- loxcoder::retrieve_prob_ensemble(loxcoder::sample(x_merged, '50k_1_1'))
+
+ggplot(data = loxcoder::valid(s)) + geom_point(aes(x = -log10(prob), y = dist_orig, color = factor(size)))
+
+ggplot(data = loxcoder::valid(s)) + geom_point(aes(x = -log10(prob), y = count, color = factor(dist_orig)))
+ggplotly()
+
+
+s_pulse2 <- loxcoder::retrieve_prob_ensemble(loxcoder::sample(x_merged, '50k_1_2'))
+
+ggplot(data = loxcoder::valid(s_pulse2)) + geom_point(aes(x = -log10(prob), y = dist_orig, color = factor(size)))
