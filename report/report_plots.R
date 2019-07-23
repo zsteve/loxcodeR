@@ -15,7 +15,7 @@ loxcoder::load_pair_distmaps('/run/media/zsteve/ssd_ext/maps/pair')
 
 # loxcoder::load_origin_distmaps('/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/maps/origin')
 # loxcoder::load_pair_distmaps('/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/maps/pair')
-loxcoder::load_prob_files('/stornext/HPCScratch/home/zhang.s/project_2019/wehi-project-19/markov/out')
+# loxcoder::load_prob_files('/stornext/HPCScratch/home/zhang.s/project_2019/wehi-project-19/markov/out')
 
 # setwd('/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/analysis')
 load('50k_merged.RData')
@@ -69,29 +69,35 @@ grid.arrange(plot_read_tot, plot_read_prop)
 ggplot(data = reads_info) + geom_bar(stat = 'identity', aes(x = factor(samp), y = diversity, fill = factor(rep)), position = position_dodge()) +
   facet_wrap(~ pulse, ncol = 5) +
   xlab('sample') +
-  labs(fill = 'replicate') +
-  theme_classic()
+  theme_classic() +
+  scale_fill_manual(breaks = c('A', 'B'), values = c('red', 'blue')) +
+  labs(fill = 'replicate')
 
-pairwise_same <- loxcoder::pair_comparison_plot(loxcoder::sample(x, '50k_1_1__A'), loxcoder::sample(x, '50k_1_1__B')) +
+dist_min <- 4
+pairwise_same <- loxcoder::pair_comparison_plot(loxcoder::sample(x, '50k_1_1__A'), loxcoder::sample(x, '50k_1_1__B'), c(dist_min, 15), samp1_name = 'S1(A)', samp2_name = 'S2(B)') +
   theme_classic() +
   scale_color_grey() +
   theme(legend.position = 'none') +
-  ggtitle('Pulse 1 S1(A) vs S1(B)')
-pairwise_diff <- loxcoder::pair_comparison_plot(loxcoder::sample(x, '50k_1_1__A'), loxcoder::sample(x, '50k_2_1__A')) +
+  ggtitle(expr(d[min] >= 4)) + #('Pulse 1 S1(A) vs S1(B)') +
+  xlim(-0.5, 3) + ylim(-0.5, 3)
+
+pairwise_diff <- loxcoder::pair_comparison_plot(loxcoder::sample(x, '50k_1_1__A'), loxcoder::sample(x, '50k_2_1__A'), c(dist_min, 15), samp1_name = 'S1(A)', samp2_name = 'S2(A)') +
   theme_classic() +
   scale_color_grey() +
   theme(legend.position = 'none') +
-  ggtitle('Pulse 1 S1(A) vs S2(A)')
+  ggtitle('') + #('Pulse 1 S1(A) vs S2(A)') +
+  xlim(-0.5, 3) + ylim(-0.5, 3)
 grid.arrange(pairwise_same, pairwise_diff, ncol = 2)
 
 size_plot_pulse1 <- loxcoder::size_plot(loxcoder::sample(x_merged, '50k_1_1')) + ylim(0, 2500) + theme_classic() +
-  ggtitle('50k_1_1 (Pulse 1)') +
+  ggtitle('Pulse 1, Sample 2') +
   theme(legend.position = c(.85, .85)) +
-  scale_fill_discrete(name = '', labels = c('invalid', 'valid'))
+  scale_fill_manual(namke = '', labels = c('invalid', 'valid'), values = c('grey', 'black'))
 
 size_plot_pulse2 <- loxcoder::size_plot(loxcoder::sample(x_merged, '50k_1_2')) + ylim(0, 2500) + theme_classic() +
-  ggtitle('50k_1_2 (Pulse 2)') +
-  theme(legend.position = "none")
+  ggtitle('Pulse 2, Sample 1') +
+  theme(legend.position = "none") +
+  scale_fill_manual(name = '', labels = c('invalid', 'valid'), values = c('grey', 'black'))
 
 grid.arrange(size_plot_pulse1, size_plot_pulse2, nrow = 1)
 
@@ -112,11 +118,24 @@ count_plot_pulse2 <- ggplot(data = loxcoder::get_data(x_merged, '50k_1_2')) + ge
 grid.arrange(count_plot_pulse1, count_plot_pulse2, nrow = 1)
 
 dist_plot_pulse1 <- loxcoder::dist_orig_plot(loxcoder::sample(x_merged, '50k_1_1'), 9) + theme_classic() + ylim(0, 800) +
-  ggtitle('50k_1_1 (Pulse 1)')
+  ggtitle('Pulse 1, Sample 1')
 dist_plot_pulse2 <- loxcoder::dist_orig_plot(loxcoder::sample(x_merged, '50k_1_2'), 9) + theme_classic() + ylim(0, 800) +
-  ggtitle('50k_1_2 (Pulse 2)')
+  ggtitle('Pulse 2, Sample 1')
 
 grid.arrange(dist_plot_pulse1, dist_plot_pulse2, ncol = 2)
+
+
+u1 <- filter(loxcoder::get_valid(x_merged, '50k_1_1'), size == 9)
+u2 <- filter(loxcoder::get_valid(x_merged, '50k_1_2'), size == 9)
+ggplot() +
+  geom_bar(aes(x = u2$dist_orig, fill = factor('samp2'))) +
+  geom_bar(aes(x = u1$dist_orig, fill = factor('samp1'))) +
+  ggtitle(sprintf("size = 9")) +
+  scale_x_continuous(breaks = 0:10, limits = c(0, 10)) +
+  xlab("Distance from origin") + ylab("Diversity") +
+  scale_fill_manual(name = '', labels = c('Pulse 1', 'Pulse 2'), values = c('red', 'dark red')) +
+  theme_classic()
+
 
 # ggplot(data = loxcoder::get_valid(x_merged, '50k_1_1')) +
 #   geom_bar(aes(x = factor(dist_orig), fill = factor(dist_orig))) +
@@ -126,12 +145,27 @@ grid.arrange(dist_plot_pulse1, dist_plot_pulse2, ncol = 2)
 #   geom_bar(aes(x = factor(dist_orig), fill = factor(dist_orig))) +
 #   scale_fill_viridis(discrete = T)
 
-rank_count_pulse1 <- loxcoder::rank_count_plot(loxcoder::sample(x_merged, '50k_1_1'), 9, 4, 10) +
+my_rank_count_plot <- function(x, size, ymax, dmax){
+  u <- valid(x)
+  u <- u[u$size == size, ]
+  u <- u[order(u$count, decreasing = T), ]
+  # u$count <- u$count/sum(u$count) # use frequency instead of raw count
+  ggplot(data = u) + geom_point(aes(x = 1:nrow(u), y = log10(count))) +
+    geom_point(aes(x = 1:nrow(u), y = dist_orig*ymax/dmax), color = 'red', alpha = 0.2) +
+    scale_x_log10(breaks = 1:10, labels = u$code[1:10]) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+    xlab('code') + ylab('log10(count)') +
+    ggtitle(sprintf('%s; size = %d', loxcoder::name(x), size)) +
+    scale_y_continuous(limits = c(0, ymax), sec.axis = sec_axis(~.*(dmax/ymax), name = expr(d[min]))) +
+    geom_smooth(aes(x = 1:nrow(u), y = dist_orig*ymax/dmax), color = 'red')
+}
+
+rank_count_pulse1 <- my_rank_count_plot(loxcoder::sample(x_merged, '50k_1_1'), 9, 5, 10) +
   scale_x_log10() +
   xlab('barcode rank') +
-  ggtitle('50k_1_1 (Pulse 1)') + theme_classic() + theme(plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
+  ggtitle('Pulse 1, Sample 1') + theme_classic() + theme(plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
 
-rank_count_pulse2 <- loxcoder::rank_count_plot(loxcoder::sample(x_merged, '50k_1_2'), 9, 4, 10) +
+rank_count_pulse2 <- my_rank_count_plot(loxcoder::sample(x_merged, '50k_1_2'), 9, 4, 10) +
   scale_x_log10() +
   xlab('barcode rank') +
   ggtitle('50k_1_2 (Pulse 2)') + theme_classic() + theme(plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))
@@ -194,6 +228,17 @@ plot_nonuniq <- ggplot(data = codes_nonuniq_pulse1_dist) +
 # 500x250 for this figure
 grid.arrange(plot_uniq, plot_nonuniq, nrow = 1)
 
+ggplot() +
+  geom_bar(stat = 'count', aes(x = codes_uniq_pulse1_dist$dist_orig, fill = factor('unique')), color = 'black', alpha = 0.5) +
+  geom_bar(stat = 'count', aes(x = codes_nonuniq_pulse1_dist$dist_orig, fill = factor('nonunique')), color = 'black', alpha = 0.5) +
+  scale_x_continuous(name = expr(d[min]), breaks = 0:10, labels = 0:10) +
+  scale_fill_manual(name = '', labels = c('Nonunique', 'Unique'), values = c('red', 'blue')) +
+  ggtitle('Pulse 1') +
+  theme_classic() +
+  theme(legend.position = c(.9, .85))  +
+  ylim(0, 3500) + xlim(0, 10)
+
+
 m_pulse2 <- m[, c('50k_1_2', '50k_2_2', '50k_3_2')]
 m_pulse2 <- m_pulse2[rowSums(!is.na(m_pulse2)) > 0,  ]
 codes_nonuniq_pulse2 <- rownames(m_pulse2)[rowSums(is.na(m_pulse2)) < 2]
@@ -228,6 +273,16 @@ plot_nonuniq <- ggplot(data = codes_nonuniq_pulse2_dist) +
 
 # 250x400 for this figure
 grid.arrange(plot_uniq, plot_nonuniq, nrow = 1)
+
+ggplot() +
+  geom_bar(stat = 'count', aes(x = codes_uniq_pulse2_dist$dist_orig, fill = factor('unique')), color = 'black', alpha = 0.5) +
+  geom_bar(stat = 'count', aes(x = codes_nonuniq_pulse2_dist$dist_orig, fill = factor('nonunique')), color = 'black', alpha = 0.5) +
+  scale_x_continuous(name = expr(d[min]), breaks = 0:10, labels = 0:10) +
+  scale_fill_manual(name = '', labels = c('Nonunique', 'Unique'), values = c('red', 'blue')) +
+  ggtitle('Pulse 2') +
+  theme_classic() +
+  theme(legend.position = 'none') +
+  ylim(0, 3500) + xlim(0, 10)
 
 # t <- loxcoder::get_valid(x_merged, '50k_3_1') %>% filter(size == 9)
 # t$prob <- loxcoder::retrieve_prob(t$id, t$size, t$dist_orig)
@@ -274,11 +329,21 @@ m <- m[, grepl('count', names(m))]
 names(m) <- samples
 m[is.na(m)] <- 0
 m <- sweep(m, 2, colSums(m), '/')
-# m[is.na(m)] <- 0
+m[m == 0] <- 0
 library(heatmap3)
 
-pdf('out.pdf', width = 6, height = 6)
-heatmap3(t(m), col = viridis(130), labCol = NA, Rowv = NA, scale = 'column')
+sample_name <- sapply(colnames(m), function(x){
+  split <- strsplit(x, '_')[[1]]
+  return(paste('Sample', split[[2]], 'Pulse', split[[3]], 'Rep', split[[5]]))
+})
+
+sample_num <- sapply(colnames(m), function(x){
+  split <- strsplit(x, '_')[[1]]
+  return(split[[2]])
+})
+
+pdf('/home/zsteve/Desktop/sem7/SCIE30001/scie30001-report/figs/heatmap.pdf', width = 8, height = 6)
+heatmap3(t(m), labCol = NA, Rowv = NA, scale = 'none', col = c('darkgray', heat.colors(120)), labRow = sample_name)
 dev.off()
 
 # MDS plot
@@ -326,14 +391,14 @@ new_codes <- lapply(new_codes, function(x){
 
 old <- lapply(samples, function(x) {
   s <- paste0(x, '_2')
-  t <- loxcoder::get_valid(x_merged, s) %>% filter(code %in% old_codes[[x]], dist_orig >= 3 & dist_orig <= 5, count > 10)
+  t <- loxcoder::get_valid(x_merged, s) %>% filter(code %in% old_codes[[x]], dist_orig > 5)
   t$sample <- x
   return(t)
 })
 
 new <- lapply(samples, function(x) {
   s <- paste0(x, '_2')
-  t <- loxcoder::get_valid(x_merged, s) %>% filter(code %in% new_codes[[x]], dist_orig >= 4, count > 1)
+  t <- loxcoder::get_valid(x_merged, s) %>% filter(code %in% new_codes[[x]], dist_orig > 5)
   t$sample <- x
   return(t)
 })
@@ -346,18 +411,21 @@ new_all <- rbind(new[[1]], new[[2]], new[[3]])
 
 m <- loxcoder::get_pair_dist(old_all, new_all)
 n <- m
-n[n > 1] = NA
+n[n > 2] = NA
 
 row_mask <- rowSums(!is.na(n)) > 0
 col_mask <- colSums(!is.na(n)) > 0
-n <- n[row_mask, col_mask]
-n[is.na(n)] <- 3
+n <- n[, col_mask]
+n[is.na(n)] <- 2
 
 row_cols <- recode(old_all$sample, `50k_1` = 'red', `50k_2` = 'green', `50k_3` = 'blue')
 col_cols <- recode(new_all$sample, `50k_1` = 'red', `50k_2` = 'green', `50k_3` = 'blue')
+
+
 heatmap3(n, Rowv = NA, Colv = NA, scale = 'none', col = viridis(130, direction = -1),
-         RowSideColors = row_cols[row_mask], ColSideColors = col_cols[col_mask],
-         RowSideLabs = c('old'), ColSideLabs = c('new'))
+         RowSideColors = row_cols, ColSideColors = col_cols[col_mask],
+         RowSideLabs = c('old'), ColSideLabs = c('new'), revC = T,
+         labRow = NA, labCol = NA)
 
 # old_new_data <- lapply(as.list(1:3), function(x){
 #   return(lapply(as.list(1:3), function(y){

@@ -15,7 +15,7 @@ setGeneric("dist_orig_plot", function(x, size) {standardGeneric("dist_orig_plot"
 setMethod("dist_orig_plot", "loxcode_sample", function(x, size){
   u <- valid(x)
   u <- u[u$size == size, ]
-  fill_scale <- scale_fill_manual(breaks = 0:15, values = c(viridis(8), viridis(8))) # use twice since gradient is hard to see otherwise
+  fill_scale <- scale_fill_manual(breaks = 0:15, values = rep('blue', 16)) # use twice since gradient is hard to see otherwise
   g <- ggplot(data = u) + geom_bar(aes(x = dist_orig, fill = factor(dist_orig)), show.legend = F) + ggtitle(sprintf("size = %d", size))+ scale_x_continuous(breaks = 0:10, limits = c(0, 10)) +
     xlab("Distance from origin") + ylab("Diversity") + ggtitle(loxcoder::name(x)) + fill_scale
   return(g)
@@ -37,10 +37,14 @@ setMethod("rank_count_plot", "loxcode_sample", function(x, size, ymax, dmax){
     scale_y_continuous(limits = c(0, ymax), sec.axis = sec_axis(~.*(dmax/ymax), name = 'distance'))
 })
 
-setGeneric("pair_comparison_plot", function(x1, x2) {standardGeneric("pair_comparison_plot")})
+setGeneric("pair_comparison_plot", function(x1, x2, ...) {standardGeneric("pair_comparison_plot")})
 #' @export
-setMethod("pair_comparison_plot", "loxcode_sample", function(x1, x2){
-  u <- get_comparison_table(x1, x2)
+setMethod("pair_comparison_plot", "loxcode_sample", function(x1, x2, dist_range = NA, samp1_name= NA, samp2_name = NA){
+  u <- get_comparison_table(x1, x2, dist_range)
+  if(is.na(samp1_name) | is.na(samp2_name)){
+    samp1_name <- loxcoder::name(x1)
+    samp2_name <- loxcoder::name(x2)
+  }
   nonzero_mask <- (u$rep1_count > 0 & u$rep2_count > 0)
   rep1_zero_mask <- (u$rep1_count == 0)
   rep2_zero_mask <- (u$rep2_count == 0)
@@ -49,13 +53,14 @@ setMethod("pair_comparison_plot", "loxcode_sample", function(x1, x2){
               color = as.factor(u$size[nonzero_mask])), alpha = 0.25) +
     geom_quasirandom(aes(y = rep(-0.2, sum(rep1_zero_mask)), x = log10(1 + u$rep2_count[rep1_zero_mask]), color = factor(-1)), groupOnX = F, width = 0.2, alpha = 0.25) +
     geom_quasirandom(aes(y = log10(1 + u$rep1_count[rep2_zero_mask]), x = rep(-0.2, sum(rep2_zero_mask)), color = factor(-1)), groupOnX = T, width = 0.2, alpha = 0.25) +
-    geom_abline() + ylab(paste('log10(reads in ', loxcoder::name(x1), ')')) + xlab(paste('log10(reads in ', loxcoder::name(x2), ')')) +
+    geom_abline() + ylab(paste('log10(reads in ', samp1_name, ')')) + xlab(paste('log10(reads in ', samp2_name, ')')) +
     ggtitle(paste(loxcoder::name(x1), 'vs', loxcoder::name(x2)))
   return(g)
 })
 
-barcode_union <- function(rep1, rep2){
-  return(unique(c(loxcoder::valid(rep1)$code, loxcoder::valid(rep2)$code)))
+barcode_union <- function(rep1, rep2, dist_range){
+  return(unique(c(filter(loxcoder::valid(rep1), dist_orig >= dist_range[1], dist_orig <= dist_range[2])$code,
+                  filter(loxcoder::valid(rep2), dist_orig >= dist_range[1], dist_orig <= dist_range[2])$code)))
 }
 
 get_barcode_stats_rep <- function(union_bc, rep){
@@ -66,8 +71,8 @@ get_barcode_stats_rep <- function(union_bc, rep){
   return(u)
 }
 
-get_comparison_table <- function(rep1, rep2){
-  bc_union <- barcode_union(rep1, rep2)
+get_comparison_table <- function(rep1, rep2, dist_range){
+  bc_union <- barcode_union(rep1, rep2, dist_range)
   u1 <- get_barcode_stats_rep(bc_union, rep1)
   u2 <- get_barcode_stats_rep(bc_union, rep2)
   u1$size <- ifelse(is.na(u1$size), u2$size, u1$size)
