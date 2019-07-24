@@ -48,6 +48,20 @@ setMethod("load_samples", "loxcode_experiment", function(x){
   return(x)
 })
 
+#' @export
+setGeneric("samples", function(x){standardGeneric("samples")})
+
+setMethod("samples", "loxcode_experiment", function(x){
+  return(names(x@samples))
+})
+
+#' @export
+setGeneric("name", function(x){ standardGeneric("name")})
+
+setMethod("name", "loxcode_experiment", function(x){
+  return(x@name)
+})
+
 #' Get loxcode_sample object
 #'
 #' @param x loxcode_experiment object
@@ -107,6 +121,56 @@ load_from_xlsx <- function(name, s, dir, suffix_R1, suffix_R2, load = TRUE){
   }
   return(x)
 }
+
+#' @export
+merge_sample <- function(s1, s2){
+  m <- merge(s1@decode@data, s2@decode@data, by = c('code', 'size', 'is_valid', 'id', 'dist_orig'), all = T)
+  m$count.x[is.na(m$count.x)] <- 0
+  m$count.y[is.na(m$count.y)] <- 0
+  m$count <- m$count.x + m$count.y
+  m <- m[, !(names(m) %in% c('count.x', 'count.y'))]
+  m <- m[order(m$code), ]
+  m <- m[, c(ncol(m), 1:(ncol(m)-1))]
+  s <- new('loxcode_sample')
+  s@decode <- new('decode_output')
+  s@decode@data <- m
+  # for the rest of the members, we just duplicate
+  s@decode@saturation <- list(s1@decode@saturation, s2@decode@saturation)
+  s@decode@read_ids <- list(s1@decode@read_ids, s2@decode@read_ids)
+  s@meta <- cbind(s1@meta, s2@meta)
+  s@name <- paste(s1@name, s2@name, sep = '_')
+  s@files <- cbind(s1@files, s2@files)
+  s@consensus_filtered_data <- list(s1@consensus_filtered_data,
+                                    s2@consensus_filtered_data)
+  s@decode_stats <- list(s1@decode_stats,
+                         s2@decode_stats)
+  return(s)
+}
+
+#' @export
+setGeneric('merge_by', function(x, by){
+  vals <- unique(x@samp_table[, by])
+  x_merged <- new("loxcode_experiment", name = paste(x@name, 'merge_by', by, sep = '_'),
+                  dir = x@dir,
+                  suffix_R1 = x@suffix_R1,
+                  suffix_R2 = x@suffix_R2)
+  x_merged@samp_table <- x@samp_table
+  x_merged@samples <- lapply(vals, function(z){
+    print(z)
+    index <- which(x@samp_table[, by] == z)
+    if(length(index) > 0){
+      out <- x@samples[[index[1]]]
+      for(i in 2:length(index)){
+        out <- merge_sample(out, x@samples[[i]])
+      }
+      return(out)
+    }else{
+      return(NA)
+    }
+  })
+  names(x_merged@samples) <- vals
+  return(x_merged)
+})
 
 #' @export
 setGeneric("venn_3way", function(x, a, b, c, size_range, dist_range, ...){standardGeneric("venn_3way")})

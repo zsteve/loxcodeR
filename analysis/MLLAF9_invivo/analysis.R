@@ -2,19 +2,20 @@ library(loxcoder)
 library(dplyr)
 library(ComplexHeatmap)
 library(plotly)
-load('analysis/MLLAF9_invivo/data.RData')
-load('analysis/MLLAF9_invivo/data_merged.RData')
 
-loxcoder::load_origin_distmaps('/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/maps/origin')
-loxcoder::load_pair_distmaps('/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/maps/pair')
-loxcoder::load_prob_files('/stornext/HPCScratch/home/zhang.s/project_2019/wehi-project-19/markov/out')
+# loxcoder::load_origin_distmaps('/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/maps/origin')
+# loxcoder::load_pair_distmaps('/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/maps/pair')
+# loxcoder::load_prob_files('/stornext/HPCScratch/home/zhang.s/project_2019/wehi-project-19/markov/out')
 
-# x <- loxcoder::load_from_xlsx('MLLAF9_invivo_tibia',
-#                               s = '/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/analysis/MLLAF9_invivo/sample_table_MLLAF9.xlsx',
-#                               dir = '/stornext/HPCScratch/home/zhang.s/project_2019/MLLAF9_invivo/',
-#                               suffix_R1 = '_R1_001.fastq',
-#                               suffix_R2 = '_R2_001.fastq',
-#                               load = T)
+loxcoder::load_origin_distmaps('/home/zsteve/ssd_ext/loxcode/maps/origin')
+loxcoder::load_pair_distmaps('/home/zsteve/ssd_ext/loxcode/maps/pair')
+
+x <- loxcoder::load_from_xlsx('MLLAF9_invivo_tibia',
+                              s = '/stornext/HPCScratch/home/zhang.s/project_2019/loxcodeR/analysis/MLLAF9_invivo/sample_table_MLLAF9.xlsx',
+                              dir = '/stornext/HPCScratch/home/zhang.s/project_2019/MLLAF9_invivo/',
+                              suffix_R1 = '_R1_001.fastq',
+                              suffix_R2 = '_R2_001.fastq',
+                              load = T)
 
 
 x_merged <- loxcoder::load_from_xlsx('MLLAF9_invivo_tibia_merged',
