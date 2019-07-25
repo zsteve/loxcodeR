@@ -161,7 +161,7 @@ setGeneric('merge_by', function(x, by){
     if(length(index) > 0){
       out <- x@samples[[index[1]]]
       for(i in 2:length(index)){
-        out <- merge_sample(out, x@samples[[i]])
+        out <- merge_sample(out, x@samples[[index[i]]])
       }
       return(out)
     }else{

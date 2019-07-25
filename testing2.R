@@ -9,9 +9,8 @@ x_50k <- loxcoder::load_from_xlsx('NN128_renamed', '/home/zsteve/loxcoder/nn128_
 
 load('/home/zsteve/loxcoder/NN128.RData')
 
-s_merged <- loxcoder::merge_sample(sample(x, '50k_1_1__A'), sample(x, '50k_1_1__B'))
+s_merged <- loxcoder::merge_sample(sample(x_50k, '50k_1_2__A'), sample(x_50k, '50k_1_2__B'))
+nrow(loxcoder::valid(s_merged))
 
-x_50k@samp_table <- cbind(x_50k@samp_table, rep = unlist(lapply(x_50k@samp_table$sample, function(x) strsplit(x, split = '_')[[1]][5])))
-merged_out <- loxcoder::merge_by(x_50k, 'rep')
-unlist(lapply(samples(merged_out), function(x) nrow(sample(merged_out, x))))
-unlist(lapply(samples(x_merged), function(x) nrow(sample(merged_out, x))))
+merged_out <- loxcoder::merge_by(x_50k, 'merged_sample')
+nrow(valid(sample(merged_out, '50k_1_2')))
