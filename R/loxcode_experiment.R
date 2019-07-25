@@ -148,7 +148,9 @@ merge_sample <- function(s1, s2){
 }
 
 #' @export
-setGeneric('merge_by', function(x, by){
+setGeneric('merge_by', function(x, by){ standardGeneric('merge_by') })
+
+setMethod('merge_by', 'loxcode_experiment', function(x, by){
   vals <- unique(x@samp_table[, by])
   x_merged <- new("loxcode_experiment", name = paste(x@name, 'merge_by', by, sep = '_'),
                   dir = x@dir,
@@ -170,6 +172,35 @@ setGeneric('merge_by', function(x, by){
   })
   names(x_merged@samples) <- vals
   return(x_merged)
+})
+
+#' @export
+setGeneric("venn_2way", function(x, a, b, size_range, dist_range, ...){standardGeneric("venn_2way")})
+
+setMethod("venn_2way", "loxcode_experiment", function(x, a, b, size_range, dist_range, labels = NA){
+  samp_names <- c(a, b)
+  samp <- as.list(samp_names)
+
+  if(!is.na(labels)){
+    samp_names <- labels
+  }
+
+  samp <- lapply(samp, function(s){
+    return(loxcoder::get_valid(x, s) %>%
+             filter(size >= size_range[1] &
+                      size <= size_range[2] &
+                      dist_orig >= dist_range[1] &
+                      dist_orig <= dist_range[2]))
+  })
+
+  v <- draw.pairwise.venn(area1 = nrow(samp[[1]]),
+                          area2 = nrow(samp[[2]]),
+                          cross.area = length(intersect(samp[[1]]$code, samp[[2]]$code)),
+                          category = samp_names,
+                          fontfamily = rep('sans', 3),
+                          cat.fontfamily = rep('sans', 2),
+                          fill = c('red', 'blue'))
+  return(grobTree(children = v))
 })
 
 #' @export

@@ -16,5 +16,7 @@ Depends:
     ggplot2,
     gridExtra,
     grid,
-    readxl
+    readxl,
+    ggbeeswarm,
+    dplyr
 RoxygenNote: 6.1.1
