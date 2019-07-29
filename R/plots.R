@@ -1,8 +1,9 @@
+#' Plots distribution of loxcode sizes found in sample
+#'
+#' @param x loxcode_sample object
+#' @export
 setGeneric("size_plot", function(x) {standardGeneric("size_plot")})
 
-#' Plots distribution of sizes found in samples
-#'
-#' @export
 setMethod("size_plot", "loxcode_sample", function(x){
   g <- ggplot(data = data(x)) + geom_bar(aes(as.factor(size), fill = is_valid), position = "stack", stat = 'count') +
     xlab('size') + ylab('diversity') +
@@ -10,8 +11,13 @@ setMethod("size_plot", "loxcode_sample", function(x){
   return(g)
 })
 
-setGeneric("dist_orig_plot", function(x, size) {standardGeneric("dist_orig_plot")})
+#' Plots distribution of dist_orig found in sample
+#'
+#' @param x loxcode_sample object
+#' @param size loxcode size to consider
 #' @export
+setGeneric("dist_orig_plot", function(x, size) {standardGeneric("dist_orig_plot")})
+
 setMethod("dist_orig_plot", "loxcode_sample", function(x, size){
   u <- valid(x)
   u <- u[u$size == size, ]
@@ -21,8 +27,18 @@ setMethod("dist_orig_plot", "loxcode_sample", function(x, size){
   return(g)
 })
 
-setGeneric("rank_count_plot", function(x, size, ymax, dmax) {standardGeneric("rank_count_plot")})
+#' Produce rank-count plot
+#'
+#' In the resulting plot, barcodes of specified size are ranked by read count. log10(count) is then plotted
+#' against barcode rank in black. In addition, dist_orig for each barcode is shown in red with the same horizontal axis.
+#'
+#' @param x loxcode_sample object
+#' @param size loxcode size to consider
+#' @param ymax max y-value for counts
+#' @param dmax max d-value for dist_orig
 #' @export
+setGeneric("rank_count_plot", function(x, size, ymax, dmax) {standardGeneric("rank_count_plot")})
+
 setMethod("rank_count_plot", "loxcode_sample", function(x, size, ymax, dmax){
   u <- valid(x)
   u <- u[u$size == size, ]
@@ -37,9 +53,19 @@ setMethod("rank_count_plot", "loxcode_sample", function(x, size, ymax, dmax){
     scale_y_continuous(limits = c(0, ymax), sec.axis = sec_axis(~.*(dmax/ymax), name = 'distance'))
 })
 
-setGeneric("pair_comparison_plot", function(x1, x2, ...) {standardGeneric("pair_comparison_plot")})
+#' Produce pair comparison scatterplot
+#'
+#' For each barcode in x1, x2, read counts in each sample are plotted on a log-scale, after adjusting sample x2 to match the
+#' total read count (for valid barcodes) in sample x1. Barcodes present in one sample and not the other are shown
+#' horizontally and vertically (below 0) using beeswarm plots
+#'
+#' @param x1 loxcode_sample object for sample 1
+#' @param x2 loxcode_sample object for sample 2
+#' @param dist_range c(lower, upper), specifying the range of dist_orig values to consider. Both bounds are inclusive.
 #' @export
-setMethod("pair_comparison_plot", "loxcode_sample", function(x1, x2, dist_range = NA, samp1_name= NA, samp2_name = NA){
+setGeneric("pair_comparison_plot", function(x1, x2, dist_range, ...) {standardGeneric("pair_comparison_plot")})
+
+setMethod("pair_comparison_plot", "loxcode_sample", function(x1, x2, dist_range, samp1_name= NA, samp2_name = NA){
   u <- get_comparison_table(x1, x2, dist_range)
   if(is.na(samp1_name) | is.na(samp2_name)){
     samp1_name <- loxcoder::name(x1)
@@ -58,11 +84,13 @@ setMethod("pair_comparison_plot", "loxcode_sample", function(x1, x2, dist_range 
   return(g)
 })
 
+#' @export
 barcode_union <- function(rep1, rep2, dist_range){
   return(unique(c(filter(loxcoder::valid(rep1), dist_orig >= dist_range[1], dist_orig <= dist_range[2])$code,
                   filter(loxcoder::valid(rep2), dist_orig >= dist_range[1], dist_orig <= dist_range[2])$code)))
 }
 
+#' @export
 get_barcode_stats_rep <- function(union_bc, rep){
   index <- match(union_bc, loxcoder::valid(rep)$code)
   u <- loxcoder::valid(rep)[index, ]
@@ -71,6 +99,7 @@ get_barcode_stats_rep <- function(union_bc, rep){
   return(u)
 }
 
+#' @export
 get_comparison_table <- function(rep1, rep2, dist_range){
   bc_union <- barcode_union(rep1, rep2, dist_range)
   u1 <- get_barcode_stats_rep(bc_union, rep1)
@@ -83,8 +112,16 @@ get_comparison_table <- function(rep1, rep2, dist_range){
   return(data.frame(code = bc_union, size = u1$size, rep1_count = u1$count, rep2_count = u2$count))
 }
 
-setGeneric("dist_count_beeswarm_plot", function(x, count_threshold) {standardGeneric("dist_count_beeswarm_plot")})
+#' Show recombination distance distribution by size as beeswarm plot
+#'
+#' Produces a beeswarm plot where for each cassette size, individual distinct barcodes are shown as
+#' points. Size and color of points correspond to the read count of each barcode.
+#' @param x loxcode_sample object
+#' @param count_threshold counts threshold, barcodes with a count number exceeding this threshold are ignored. This is in order
+#' to avoid having very large points resulting from barcodes with disproportionate read counts.
 #' @export
+setGeneric("dist_count_beeswarm_plot", function(x, count_threshold) {standardGeneric("dist_count_beeswarm_plot")})
+
 setMethod("dist_count_beeswarm_plot", "loxcode_sample", function(x, count_threshold){
   loxcoder::valid(x) %>% filter(count < count_threshold) -> y
   g <- ggplot(data = y) + geom_quasirandom(width = 0.9, groupOnX = F, aes(x = dist_orig, y = size, size = count, color = count), alpha = 0.2) +

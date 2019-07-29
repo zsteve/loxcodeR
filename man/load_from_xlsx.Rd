@@ -19,6 +19,9 @@ load_from_xlsx(name, s, dir, suffix_R1, suffix_R2, load = TRUE)
 
 \item{load}{boolean, whether to load samples or not (default is TRUE)}
 }
+\value{
+loxcode_experiment object
+}
 \description{
 Create a loxcode_experiment from xlsx sample table.
 }

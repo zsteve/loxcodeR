@@ -3,6 +3,7 @@
 \docType{class}
 \name{decode_output-class}
 \alias{decode_output-class}
+\alias{decode_output}
 \title{S4 class to contain output of decode()}
 \description{
 S4 class to contain output of decode()

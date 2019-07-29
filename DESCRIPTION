@@ -18,5 +18,6 @@ Depends:
     grid,
     readxl,
     ggbeeswarm,
-    dplyr
+    dplyr,
+    VennDiagram
 RoxygenNote: 6.1.1

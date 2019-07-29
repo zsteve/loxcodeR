@@ -3,23 +3,24 @@
 \docType{class}
 \name{loxcode_experiment-class}
 \alias{loxcode_experiment-class}
-\title{S4 class for a single loxcode experiment, enabling handling of multiple samples}
+\alias{loxcode_experiment}
+\title{Loxcode experiment object}
 \description{
-S4 class for a single loxcode experiment, enabling handling of multiple samples
+The `loxcode_experiment` object enables handling of data from multiple samples.
 }
 \section{Slots}{
 
 \describe{
 \item{\code{name}}{string, name of the experiment}
 
-\item{\code{suffix_R1}}{string, R1 suffix}
+\item{\code{suffix_R1}}{string, R1 suffix that is appended to the filename prefix, e.g. `_R1_001.fastq`}
 
-\item{\code{suffix_R2}}{string, R2 suffix}
+\item{\code{suffix_R2}}{string, R2 suffix that is appended to the filename prefix, e.g. `_R2_001.fastq`}
 
-\item{\code{dir}}{string, directory containing R1, R2 fastq files}
+\item{\code{dir}}{string, directory containing R1, R2 *.fastq files. Must end with '/'}
 
-\item{\code{samples}}{list, contains loxcode_sample objects}
+\item{\code{samples}}{list, contains loxcode_sample objects that can be accessed by the sample name}
 
-\item{\code{samp_table}}{data.frame, user-specified table.}
+\item{\code{samp_table}}{data.frame, user-specified table that can be loaded from an Excel spreadsheet}
 }}
 

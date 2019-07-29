@@ -3,6 +3,7 @@
 \docType{class}
 \name{loxcode_sample-class}
 \alias{loxcode_sample-class}
+\alias{loxcode_sample}
 \title{S4 class to represent loxcode experimental sample data}
 \description{
 S4 class to represent loxcode experimental sample data

@@ -1,3 +1,7 @@
+#' Load distance maps for distance-to-origin
+#'
+#' @param path path to directory containing maps named 0, 1, 2, 3, 4, corresponding to the size index of
+#' 13, 9, 7, 5, 3 element cassettes respectively
 #' @export
 load_origin_distmaps <- function(path){
   load_origin_files_wrapper(c(paste(path, 0, sep = '/'),
@@ -7,12 +11,18 @@ load_origin_distmaps <- function(path){
                             paste(path, 4, sep = '/')))
 }
 
+#' Load distance maps for pairwise distances
+#'
+#' @param path path to directory containing the maps 0 (for 13-element distances) and 1 (for 9-element distances)
 #' @export
 load_pair_distmaps <- function(path){
   load_pair_files_wrapper(c(paste(path, 0, sep = '/'),
                             paste(path, 1, sep = '/')))
 }
 
+#' Load probability tables (Markov chain)
+#'
+#' @param path path to directory containing the Markov chain tables
 #' @export
 load_prob_files <- function(path){
   size_idx <- 0:4
@@ -26,7 +36,7 @@ load_prob_files <- function(path){
 #' @slot data contains raw output of decode() as a data.frame
 #' @slot read_ids list of FASTQ
 #' @export
-setClass (
+decode_output <- setClass (
   "decode_output",
 
   # Defining slot type
@@ -56,7 +66,7 @@ remove_existing <- function(x, n){
 #' @slot decode A data.frame to contain raw decode data from loxcoder::decode()
 #' @slot meta A data.frame for user-defined sample metadata
 #' @export
-setClass (
+loxcode_sample <- setClass (
   "loxcode_sample",
 
   # Defining slot type
@@ -80,11 +90,24 @@ setClass (
 )
 
 setMethod("length", "loxcode_sample", function(x) nrow(x@decode@data))
+
 setMethod("nrow", "loxcode_sample", function(x) length(x))
 
-setGeneric("name", function(x){standardGeneric("name")})
+#' Get loxcode sample name (description)
+#'
 #' @export
+setGeneric("name", function(x){standardGeneric("name")})
+
 setMethod("name", "loxcode_sample", function(x) x@name)
+
+#' Set loxcode sample name (description)
+#'
+#' @export
+setGeneric("name<-", function(x, v){standardGeneric("name<-")})
+
+setMethod("name<-", "loxcode_sample", function(x, v){
+  x@name <- v
+})
 
 setGeneric("validate", function(x){ standardGeneric("validate") })
 
@@ -101,38 +124,44 @@ setGeneric("impute", function(x) {standardGeneric("impute")})
 
 #' Impute missing code in 13-element cassettes
 #'
+#' For 13-element cassettes that are missing a single element, the
+#' missing element is imputed to minimise the resulting dist_orig.
 #' @export
 setMethod("impute", "loxcode_sample", function(x){
   x@decode@data$code <- impute_13(x@decode@data$code, x@decode@data$size)
   return(x)
 })
+
+#' Get cassette IDs
+#'
+#' Appends a column of packed cassette IDs, or -1 if it cannot be packed
+#' @export
 setGeneric("makeid", function(x){ standardGeneric("makeid") });
 
-#' Append a colum of packed cassette IDs, or -1 if it cannot be packed
-#'
-#' @export
 setMethod("makeid", "loxcode_sample", function(x){
   x@decode@data <- remove_existing(x@decode@data, 'id')
   x@decode@data <- cbind(x@decode@data, data.frame(id = pack(data(x)$code, data(x)$is_valid)))
   return(x)
 })
 
+#' Fetch distances from origin (dist_orig)
+#'
+#' Appends a column of dist_orig values for valid cassettes
+#' @export
 setGeneric("get_origin_dist", function(x) { standardGeneric("get_origin_dist") })
 
-#' Fetch distances from origin
-#'
-#' @export
 setMethod("get_origin_dist", "loxcode_sample", function(x){
   x@decode@data <- remove_existing(x@decode@data, 'dist_orig')
   x@decode@data <- cbind(x@decode@data, data.frame(dist_orig = retrieve_dist_origin(data(x)$id, data(x)$size)))
   return(x)
 })
 
-setGeneric("get_rec_prob", function(x, size) {standardGeneric("get_rec_prob")})
-
 #' Get recombination distance distribution
 #'
+#' Returns the proportion of valid cassettes for each valid recombination distance (dist_orig)
 #' @export
+setGeneric("get_rec_prob", function(x, size) {standardGeneric("get_rec_prob")})
+
 setMethod("get_rec_prob", "loxcode_sample", function(x, size){
   r <- data.frame(table(valid(x)$dist_orig))
   names(r) <- c('rec', 'prob')
@@ -141,11 +170,17 @@ setMethod("get_rec_prob", "loxcode_sample", function(x, size){
   return(r)
 })
 
+#' Get ensemble generation probability
+#'
+#' Retrieve ensemble probabilities as a weighted linear combination of Markov probabilities
+#' where distances (dist_orig) are weighted using the sample distribution of recombination distances.
+#'
+#' Results are appended to readout data as a 'prob' column.
+#'
+#' @param x loxcode_sample object
+#' @export
 setGeneric("retrieve_prob_ensemble", function(x) {standardGeneric("retrieve_prob_ensemble")})
 
-#' Get generation probability using ensemble
-#'
-#' @export
 setMethod("retrieve_prob_ensemble", "loxcode_sample", function(x){
   sizes <- unique(loxcoder::valid(x)$size)
   x@decode@data$prob <- NA
@@ -162,22 +197,22 @@ setMethod("retrieve_prob_ensemble", "loxcode_sample", function(x){
   return(x)
 })
 
+#' Access decoded cassette data, valid cassettes only
+#'
+#' @param x loxcode_sample object
 #' @export
 setGeneric("valid", function(x){ standardGeneric("valid") })
 
-#' Valid cassettes only
-#'
-#' @export
 setMethod("valid", "loxcode_sample", function(x){
   v=data(x);
   return(v[v$is_valid == TRUE, ])
 })
 
+#' Access decoded cassette data
+#'
+#' @param x loxcode_sample object
 #' @export
 setGeneric("data", function(x){ standardGeneric("data") })
 
-#' Access decoded cassette data
-#'
-#' @export
 setMethod("data", "loxcode_sample", function(x){ return(x@decode@data) })
 

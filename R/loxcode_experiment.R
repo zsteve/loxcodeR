@@ -1,13 +1,14 @@
-#' S4 class for a single loxcode experiment, enabling handling of multiple samples
+#' Loxcode experiment object
+#'
+#' The `loxcode_experiment` object enables handling of data from multiple samples.
 #'
 #' @slot name string, name of the experiment
-#' @slot suffix_R1 string, R1 suffix
-#' @slot suffix_R2 string, R2 suffix
-#' @slot dir string, directory containing R1, R2 fastq files
-#' @slot samples list, contains loxcode_sample objects
-#' @slot samp_table data.frame, user-specified table.
-
-setClass(
+#' @slot suffix_R1 string, R1 suffix that is appended to the filename prefix, e.g. `_R1_001.fastq`
+#' @slot suffix_R2 string, R2 suffix that is appended to the filename prefix, e.g. `_R2_001.fastq`
+#' @slot dir string, directory containing R1, R2 *.fastq files. Must end with '/'
+#' @slot samples list, contains loxcode_sample objects that can be accessed by the sample name
+#' @slot samp_table data.frame, user-specified table that can be loaded from an Excel spreadsheet
+loxcode_experiment <- setClass(
   "loxcode_experiment",
 
   representation(
@@ -28,8 +29,17 @@ setClass(
     samp_table = data.frame()
   )
 )
-
+#' Load data from FASTQ for all samples in a loxcode_experiment object
+#'
+#' For each sample in the loxcode_experiment, barcodes readout is performed from FASTQ
+#' followed by element imputation for the 13-element codes. Loxcodes are then validated, IDs fetched,
+#' and distance-from-origin is retrieved.
+#'
+#' @param x loxcode_experiment object for which to load samples
+#' @return loxcode_experiment object with sample data loaded
+#' @export
 setGeneric("load_samples", function(x) {standardGeneric("load_samples")})
+
 setMethod("load_samples", "loxcode_experiment", function(x){
     x@samples <- lapply(names(x@samples), function(z){
     print(z)
@@ -48,13 +58,34 @@ setMethod("load_samples", "loxcode_experiment", function(x){
   return(x)
 })
 
+#' Fetch names of samples
+#'
+#' The names returned by this function can be used to refer to each individual sample
+#' @param x loxcode_experiment object
+#' @return names (handles) of samples
 #' @export
-setGeneric("samples", function(x){standardGeneric("samples")})
+setGeneric("sampnames", function(x){standardGeneric("sampnames")})
 
-setMethod("samples", "loxcode_experiment", function(x){
+setMethod("sampnames", "loxcode_experiment", function(x){
   return(names(x@samples))
 })
 
+#' Set names of samples
+#'
+#' @export
+setGeneric("sampnames<-", function(x, v){ standardGeneric("sampnames<-")})
+
+setMethod("sampnames<-", "loxcode_experiment", function(x, v){
+  if(length(v) != length(unique(v))){
+    stop("Sample names are not unique")
+  }
+  names(x@samples) <- v
+})
+
+#' Fetch experiment name
+#'
+#' @param x loxcode_experiment object
+#' @return name of experiment
 #' @export
 setGeneric("name", function(x){ standardGeneric("name")})
 
@@ -62,10 +93,20 @@ setMethod("name", "loxcode_experiment", function(x){
   return(x@name)
 })
 
-#' Get loxcode_sample object
+#' Set experiment name
+#'
+#' @export
+setGeneric("name<-", function(x, v) {standardGeneric("name<-")})
+
+setMethod("name<-", "loxcode_experiment", function(x, v){
+  x@name <- v
+})
+
+#' Get loxcode_sample object by sample name
 #'
 #' @param x loxcode_experiment object
-#' @param s string, sample name
+#' @param s sample name
+#' @return loxcode_sample object corresponding to s
 #' @export
 setGeneric("sample", function(x, s){standardGeneric("sample")})
 
@@ -73,6 +114,12 @@ setMethod("sample", "loxcode_experiment", function(x, s){
   return(x@samples[[s]])
 })
 
+#' Get unvalidated readout data for a given sample
+#'
+#' Equivalent to performing loxcoder::data() on the sample s
+#' @param x loxcode_experiment object
+#' @param s sample name
+#' @return data.frame containing unvalidated readout data for sample s
 #' @export
 setGeneric("get_data", function(x, s){standardGeneric("get_data")})
 
@@ -80,6 +127,11 @@ setMethod("get_data", "loxcode_experiment", function(x, s){
   return(loxcoder::data(x@samples[[s]]))
 })
 
+#' Get validated readout data for a given sample
+#'
+#' Equivalent to performing loxcoder::valid() on the sample s
+#' @param x loxcode_experiment object
+#' @param s sample name
 #' @export
 setGeneric("get_valid", function(x, s){standardGeneric("get_valid")})
 
@@ -109,7 +161,7 @@ setMethod("get_valid", "loxcode_experiment",function(x, s){
 #' @param suffix_R1 string, R1 suffix
 #' @param suffix_R2 string, R2 suffix
 #' @param load boolean, whether to load samples or not (default is TRUE)
-#'
+#' @return loxcode_experiment object
 #' @export
 load_from_xlsx <- function(name, s, dir, suffix_R1, suffix_R2, load = TRUE){
   x <- new("loxcode_experiment", name = name, dir = dir, suffix_R1 = suffix_R1, suffix_R2 = suffix_R2)
@@ -122,6 +174,13 @@ load_from_xlsx <- function(name, s, dir, suffix_R1, suffix_R2, load = TRUE){
   return(x)
 }
 
+#' Merge two loxcode_sample objects
+#'
+#' Barcodes from s1 and s2 are merged. For barcodes present in both samples, read counts are
+#' summed. Sample descriptors and other members are concatenated in order.
+#' @param s1 sample 1
+#' @param s2 sample 2
+#' @return loxcode_sample object corresponding to merged sample
 #' @export
 merge_sample <- function(s1, s2){
   m <- merge(s1@decode@data, s2@decode@data, by = c('code', 'size', 'is_valid', 'id', 'dist_orig'), all = T)
@@ -147,6 +206,15 @@ merge_sample <- function(s1, s2){
   return(s)
 }
 
+#' Merge samples by label
+#'
+#' Merge samples present in a loxcode_experiment object according to a specified label column in
+#' samp_table. All samples with a common value for the label column are merged together. The resulting
+#' loxcode_experiment object contains loxcode_samples named by the corresponding labels in by.
+#'
+#' @param x loxcode_experiment object
+#' @param by name of column in samp_table to merge by
+#' @return loxcode_experiment object containing merged samples
 #' @export
 setGeneric('merge_by', function(x, by){ standardGeneric('merge_by') })
 
@@ -174,6 +242,16 @@ setMethod('merge_by', 'loxcode_experiment', function(x, by){
   return(x_merged)
 })
 
+#' 2-way Venn diagram
+#'
+#' Plot 2-way Venn diagram showing common and distinct barcodes between two given samples in an experiment using VennDiagram package
+#' @param x loxcode_experiment object
+#' @param a sample A name
+#' @param b sample B name
+#' @param size_range range of loxcode sizes to show in Venn diagram. Both lower and upper bounds are inclusive
+#' @param dist_range range of dist_orig values to show in Venn diagram. Both lower and upper bounds are inclusive
+#' @param labels optional list of custom labels for samples A, B, otherwise sample names for A, B are used.
+#' @return grobTree containing the 2-way Venn diagram graphic
 #' @export
 setGeneric("venn_2way", function(x, a, b, size_range, dist_range, ...){standardGeneric("venn_2way")})
 
@@ -203,6 +281,18 @@ setMethod("venn_2way", "loxcode_experiment", function(x, a, b, size_range, dist_
   return(grobTree(children = v))
 })
 
+#' 3-way Venn diagram
+#'
+#' Plot 3-way Venn diagram showing common and distinct barcodes between two given samples in an experiment using VennDiagram package
+#' @param x loxcode_experiment object
+#' @param a sample A name
+#' @param b sample B name
+#' @param c sample C name
+#' @param size_range range of loxcode sizes to show in Venn diagram. Both lower and upper bounds are inclusive
+#' @param dist_range range of dist_orig values to show in Venn diagram. Both lower and upper bounds are inclusive
+#' @param labels optional list of custom labels for samples A, B, C, otherwise sample names for A, B, C are used.
+#' @return grobTree containing the 3-way Venn diagram graphic
+#' @export
 #' @export
 setGeneric("venn_3way", function(x, a, b, c, size_range, dist_range, ...){standardGeneric("venn_3way")})
 
