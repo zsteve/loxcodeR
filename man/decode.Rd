@@ -4,12 +4,14 @@
 \alias{decode}
 \title{Decode FASTQ}
 \usage{
-decode(r, name, meta, min_r1_len, min_r2_len)
+decode(r, name, meta, min_r1_len, min_r2_len, full)
 }
 \arguments{
 \item{r}{Paths of R1, 2 respectively}
 
 \item{meta}{User-defined data-frame for sample metadata}
+
+\item{full}{whether to supply full output (including read IDs, etc)}
 
 \item{min_read_length}{min read length for R1, R2 filter respectively}
 }

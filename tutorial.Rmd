@@ -1,0 +1,88 @@
+---
+title: "LoxcodeR"
+output: 
+  rmarkdown::html_document
+---
+
+# Quick introduction
+
+In what follows, we give a brief introduction to loading experimental data using the loxcodeR package.
+
+```{r echo = T, include = F}
+library(loxcoder)
+```
+
+Before we load our data, we must first specify the location of distance maps for distance-to-origin and pairwise distance retrieval. 
+
+```{r}
+# load distance maps 
+loxcoder::load_origin_distmaps('/run/media/zsteve/ssd_ext/loxcode/maps/origin')
+loxcoder::load_pair_distmaps('/run/media/zsteve/ssd_ext/loxcode/maps/pair')
+```
+
+The easiest way to load samples using LoxcodeR is to bundle related samples together into a single `loxcode_experiment` object. The layout of such an experiment can be specified by the user using a sample table. In our case, we specify the table as an Excel *sample table*.
+
+The first five columns of the sample table are required. Any additional information can be supplied in additional columns (e.g. biological and technical replicates). In our example, `merged_sample` specifies the biological replicate to which sample belongs; `rep` specifies the technical replicate (A or B), `pulse` specifies the tamoxifen pulse. 
+
+```{r} 
+readxl::read_excel('/home/zsteve/loxcoder/nn128_50k_samples.xlsx')
+```
+
+We may now use the `load_from_xlsx` function to perform the decoding and preprocessing pipeline for Loxcode barcodes from FASTQ, as follows.
+
+```{r}
+# x_50k <- loxcoder::load_from_xlsx('NN128_renamed', '/home/zsteve/loxcoder/nn128_50k_samples.xlsx',
+#                          dir='/home/zsteve/ssd_ext/loxcode/renamed/',
+#                          suffix_R1='_R1_001.fastq', suffix_R2='_R2_001.fastq', load = T, full = F)
+
+load('/home/zsteve/loxcoder/nn128_50k.RData')
+```
+
+The resulting `loxcode_experiment` object thus contains a number of slots. Importantly, we can view and modify the sample table
+
+```{r}
+t <- loxcoder::samptable(x_50k)
+t <- cbind(t, t(sapply(t$sample, function(x) strsplit(x, split = '_')[[1]])))
+t <- t[, -c(9)] # drop a '__'
+names(t)[6:9] <- c('num_cells', 'samp_num', 'pulse', 'rep')
+t$samp_pulse <- paste('samp', t$samp_num, 'pulse', t$pulse, sep = '_')
+loxcoder::samptable(x_50k) <- t
+loxcoder::samptable(x_50k)
+```
+
+Let us merge our technical replicates (A, B). We can achieve this using the `merge_by` function, which yields a new `loxcode_experiment` object.
+
+```{r}
+x_merged <- loxcoder::merge_by(x_50k, 'samp_pulse')
+loxcoder::sampnames(x_merged)
+```
+
+# Plotting
+
+First, we might want to investigate the correlation in barcode counts between samples. We can produce a plot for this using the `pair_comparison_plot` function. Each point in the resulting plot corresponds to a distinct barcode, with coordinates given as log read count in each sample, and colored by size. Barcodes found in one sample but not the other are shown horizontally and vertically with a 'size' of -1. We note that the distribution of points lies condensed and close to the diagonal for replicates. In the case of unrelated samples, we note that the distribution is more disperse, and there are more barcodes found in only one sample.
+
+```{r}
+loxcoder::pair_comparison_plot(loxcoder::sample(x_50k, '50k_1_1__A'),
+                                     loxcoder::sample(x_50k, '50k_1_1__B'), dist_range = c(0, 15))
+
+loxcoder::pair_comparison_plot(loxcoder::sample(x_50k, '50k_1_1__A'),
+                                     loxcoder::sample(x_50k, '50k_2_1__A'), dist_range = c(0, 15))
+
+```
+
+To further investigate, we can plot the distribution of barcode sizes (both valid and invalid) and recombination distances (for barcodes of size 9).
+
+```{r}
+grid.arrange(loxcoder::size_plot(loxcoder::sample(x_merged, 'samp_1_pulse_1')), 
+             loxcoder::dist_orig_plot(loxcoder::sample(x_merged, 'samp_1_pulse_1'), size = 9),
+             loxcoder::size_plot(loxcoder::sample(x_merged, 'samp_1_pulse_2')),
+             loxcoder::dist_orig_plot(loxcoder::sample(x_merged, 'samp_1_pulse_2'), size = 9))
+```
+
+```{r}
+t <- loxcoder::get_data(x_50k, '50k_1_1__A')
+out <- loxcoder::min_flip_dist(t$code, t$size, t$is_valid)
+t <- cbind(t, out)
+t$diff <- ifelse(t$is_valid, t$d_min - t$dist_orig, NA)
+```
+

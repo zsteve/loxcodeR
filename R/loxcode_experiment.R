@@ -36,18 +36,19 @@ loxcode_experiment <- setClass(
 #' and distance-from-origin is retrieved.
 #'
 #' @param x loxcode_experiment object for which to load samples
-#' @return loxcode_experiment object with sample data loaded
+#' @param full boolean, whether to produce full debugging output (default is FALSE, this uses significantly more memory)
+#' @return loxc# ode_experiment object with sample data loaded
 #' @export
-setGeneric("load_samples", function(x) {standardGeneric("load_samples")})
+setGeneric("load_samples", function(x, ...) {standardGeneric("load_samples")})
 
-setMethod("load_samples", "loxcode_experiment", function(x){
+setMethod("load_samples", "loxcode_experiment", function(x, full = F){
     x@samples <- lapply(names(x@samples), function(z){
     print(z)
     samp_table_sliced <- x@samp_table[match(z, x@samp_table$sample), ]
     out <- loxcoder::decode(c(paste0(x@dir, x@samples[[z]], x@suffix_R1), paste0(x@dir, x@samples[[z]], x@suffix_R2)),
                        name = z, meta = samp_table_sliced$meta,
                      min_r1_len = samp_table_sliced$min_r1_len,
-                     min_r2_len = samp_table_sliced$min_r2_len)
+                     min_r2_len = samp_table_sliced$min_r2_len, full = full)
     out <- loxcoder::impute(out)
     out <- loxcoder::validate(out)
     out <- loxcoder::makeid(out)
@@ -139,6 +140,25 @@ setMethod("get_valid", "loxcode_experiment",function(x, s){
   return(loxcoder::valid(x@samples[[s]]))
 })
 
+#' Get sample table
+#'
+#' @export
+setGeneric("samptable", function(x){ standardGeneric("samptable")})
+
+setMethod("samptable", "loxcode_experiment", function(x){
+  return(x@samp_table)
+})
+
+#' Set sample table
+#'
+#' @export
+setGeneric("samptable<-", function(x, value){ standardGeneric("samptable<-")})
+
+setMethod("samptable<-", "loxcode_experiment", function(x, value){
+  x@samp_table <- value
+  return(x)
+})
+
 #' Create experiment
 #'
 #' Create a loxcode_experiment from xlsx sample table.
@@ -161,15 +181,16 @@ setMethod("get_valid", "loxcode_experiment",function(x, s){
 #' @param suffix_R1 string, R1 suffix
 #' @param suffix_R2 string, R2 suffix
 #' @param load boolean, whether to load samples or not (default is TRUE)
+#' @param full boolean, whether to produce full debugging output (default is FALSE, this uses significantly more memory)
 #' @return loxcode_experiment object
 #' @export
-load_from_xlsx <- function(name, s, dir, suffix_R1, suffix_R2, load = TRUE){
+load_from_xlsx <- function(name, s, dir, suffix_R1, suffix_R2, load = TRUE, full = FALSE){
   x <- new("loxcode_experiment", name = name, dir = dir, suffix_R1 = suffix_R1, suffix_R2 = suffix_R2)
   x@samp_table <- data.frame(read_excel(s))
   x@samples = lapply(x@samp_table$prefix, function(z) z)
   names(x@samples) <- x@samp_table$sample
   if(load){
-    x <- loxcoder::load_samples(x)
+    x <- loxcoder::load_samples(x, full = full)
   }
   return(x)
 }

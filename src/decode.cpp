@@ -103,11 +103,12 @@ std::vector<string> Consensus(vector<string> a, vector<string> b)
 //' @param r Paths of R1, 2 respectively
 //' @param meta User-defined data-frame for sample metadata
 //' @param min_read_length min read length for R1, R2 filter respectively
+//' @param full whether to supply full output (including read IDs, etc) 
 //' @return S4 loxcode_sample object with decoded results
 //' @export
 // [[Rcpp::export]]
 Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame meta,
-                int min_r1_len, int min_r2_len){
+                int min_r1_len, int min_r2_len, bool full){
   ifstream fileR1(r[0]); ifstream fileR2(r[1]); // input files
   int counter=0;
   /*
@@ -255,10 +256,10 @@ Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame me
           // consensus empty -- not sensible
           std::string r1_str = ""; for(auto i : r1){r1_str+=i; r1_str+=" ";}
           std::string r2_str = ""; for(auto i : r2){r2_str+=i; r2_str+=" ";}
-          reads_consensus_filtered_data.push_back(std::vector<std::string>({r1_str, r2_str}));
+          if(full) reads_consensus_filtered_data.push_back(std::vector<std::string>({r1_str, r2_str}));
           reads_consensus_filtered++;
        }
-       saturation.push_back(keep);
+       if(full) saturation.push_back(keep);
     }
 
   }
@@ -266,7 +267,8 @@ Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame me
   std::vector<int> output_code_sizes; output_code_sizes.reserve(code_readout.size());
   std::vector<string> output_code_readout; output_code_readout.reserve(code_readout.size());
   std::vector<int> output_code_counts; output_code_counts.reserve(code_readout.size());
-  std::vector<std::vector<int> > output_code_readids; output_code_readids.reserve(code_readout.size());
+  std::vector<std::vector<int> > output_code_readids; 
+  if(full) output_code_readids.reserve(code_readout.size());
   for(auto c : code_readout){
       output_code_readout.push_back("");
       for(int i = 1; i < c.first.size()-1; ++i){ // we suppress start and end
@@ -276,7 +278,7 @@ Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame me
       }
       output_code_counts.push_back(c.second.size());
       output_code_sizes.push_back(c.first.size() - 2);
-      output_code_readids.push_back(c.second);
+      if(full) output_code_readids.push_back(c.second);
   }
 
   Rcpp::DataFrame output_df = Rcpp::DataFrame::create(Named("count") = wrap(output_code_counts),

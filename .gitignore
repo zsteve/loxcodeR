@@ -16,3 +16,5 @@ other/*.gz
 other/reconstruct_loxcode
 maps/*
 analysis/*.html
+doc
+Meta

@@ -4,7 +4,8 @@
 \alias{load_from_xlsx}
 \title{Create experiment}
 \usage{
-load_from_xlsx(name, s, dir, suffix_R1, suffix_R2, load = TRUE)
+load_from_xlsx(name, s, dir, suffix_R1, suffix_R2, load = TRUE,
+  full = FALSE)
 }
 \arguments{
 \item{name}{string, name of the experiment}
@@ -18,6 +19,8 @@ load_from_xlsx(name, s, dir, suffix_R1, suffix_R2, load = TRUE)
 \item{suffix_R2}{string, R2 suffix}
 
 \item{load}{boolean, whether to load samples or not (default is TRUE)}
+
+\item{full}{boolean, whether to produce full debugging output (default is FALSE, this uses significantly more memory)}
 }
 \value{
 loxcode_experiment object

@@ -20,4 +20,6 @@ Depends:
     ggbeeswarm,
     dplyr,
     VennDiagram
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr
 RoxygenNote: 6.1.1

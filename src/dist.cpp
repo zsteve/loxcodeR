@@ -37,10 +37,10 @@ class distmaps{
     static bool initialised_prob[5][15];
 
     static void load_origin_files(std::vector<std::string> paths){
-      if(initialised){
-        cerr << __FUNCTION__ << ": already initialised!" << endl;
-        Rcpp::stop("Already initialised");
-      }
+//      if(initialised){
+//        cerr << __FUNCTION__ << ": already initialised!" << endl;
+//        Rcpp::stop("Already initialised");
+//      }
       if(paths.size() != 5){
          cerr << __FUNCTION__ << ": paths.size() was not 5! missing some distance maps..." << endl;
          Rcpp::stop("Missing files");
@@ -55,10 +55,10 @@ class distmaps{
     }
 
     static void load_pair_files(std::vector<std::string> paths){
-      if(initialised_pair){
-        cerr << __FUNCTION__ << ": already initialised pair!" << endl;
-        Rcpp::stop("Already initialised");
-      }
+//      if(initialised_pair){
+//        cerr << __FUNCTION__ << ": already initialised pair!" << endl;
+//        Rcpp::stop("Already initialised");
+//      }
       if(paths.size() != 2){
         cerr << __FUNCTION__ << ": paths.size() was not 2! missing some distance maps..." << endl;
         Rcpp::stop("Missing files");
@@ -230,6 +230,14 @@ std::vector<long long> pack(SEXP c, std::vector<bool> v){
   return std::vector<long long>();
 }
 
+//' Assumes that input cassette is valid already!
+//' 
+//' @export
+// [[Rcpp::export]]
+int retrieve_dist_origin_single(long long c, int size){
+    return (int)distmaps::read_origin(c, get_size_idx(size))-1;
+}
+
 //' @export
 // [[Rcpp::export]]
 std::vector<int> retrieve_dist_origin(std::vector<long long> c, std::vector<int> sizes){
@@ -241,7 +249,8 @@ std::vector<int> retrieve_dist_origin(std::vector<long long> c, std::vector<int>
     if(c[i] != NA_INTEGER){
       // -1 indicates invalid cassette value. If not -1 then we assume that sizes is sensible...
       // must first call is_valid and pack beforehand!
-      out[i] = (int)distmaps::read_origin(c[i], get_size_idx(sizes[i]))-1; // don't forget to subtract 1
+//      out[i] = (int)distmaps::read_origin(c[i], get_size_idx(sizes[i]))-1; // don't forget to subtract 1
+        out[i] = retrieve_dist_origin_single(c[i], sizes[i]); 
     }else{
       out[i] = NA_INTEGER; // -1 for missing values
     }

@@ -62,6 +62,7 @@ setMethod("rank_count_plot", "loxcode_sample", function(x, size, ymax, dmax){
 #' @param x1 loxcode_sample object for sample 1
 #' @param x2 loxcode_sample object for sample 2
 #' @param dist_range c(lower, upper), specifying the range of dist_orig values to consider. Both bounds are inclusive.
+#'
 #' @export
 setGeneric("pair_comparison_plot", function(x1, x2, dist_range, ...) {standardGeneric("pair_comparison_plot")})
 

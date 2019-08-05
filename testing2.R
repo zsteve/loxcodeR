@@ -1,12 +1,12 @@
 library(loxcoder)
 
-# loxcoder::load_origin_distmaps('/run/media/zsteve/ssd_ext/loxcode/maps/origin')
-# loxcoder::load_pair_distmaps('/run/media/zsteve/ssd_ext/loxcode/maps/pair')
+loxcoder::load_origin_distmaps('/run/media/zsteve/ssd_ext/loxcode/maps/origin')
+loxcoder::load_pair_distmaps('/run/media/zsteve/ssd_ext/loxcode/maps/pair')
 
-# x_50k <- loxcoder::load_from_xlsx('NN128_renamed', '/home/zsteve/loxcoder/nn128_50k_samples.xlsx',
-#                          dir='/home/zsteve/ssd_ext/loxcode/renamed/',
-#                          suffix_R1='_R1_001.fastq', suffix_R2='_R2_001.fastq', load = T)
-# save('x_50k', file = '/home/zsteve/loxcoder/NN128_50k.RData')
+x_50k <- loxcoder::load_from_xlsx('NN128_renamed', '/home/zsteve/loxcoder/nn128_50k_samples.xlsx',
+                         dir='/home/zsteve/ssd_ext/loxcode/renamed/',
+                         suffix_R1='_R1_001.fastq', suffix_R2='_R2_001.fastq', load = T, full = F)
+save('x_50k', file = '/home/zsteve/loxcoder/NN128_50k.RData')
 
 load('/home/zsteve/loxcoder/NN128_50k.RData')
 load('/home/zsteve/loxcoder/NN128.RData')

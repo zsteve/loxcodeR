@@ -50,9 +50,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// min_flip_dist
+Rcpp::DataFrame min_flip_dist(std::vector<std::string> c, std::vector<int> size, std::vector<bool> v);
+RcppExport SEXP _loxcoder_min_flip_dist(SEXP cSEXP, SEXP sizeSEXP, SEXP vSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type c(cSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type size(sizeSEXP);
+    Rcpp::traits::input_parameter< std::vector<bool> >::type v(vSEXP);
+    rcpp_result_gen = Rcpp::wrap(min_flip_dist(c, size, v));
+    return rcpp_result_gen;
+END_RCPP
+}
 // decode
-Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame meta, int min_r1_len, int min_r2_len);
-RcppExport SEXP _loxcoder_decode(SEXP rSEXP, SEXP nameSEXP, SEXP metaSEXP, SEXP min_r1_lenSEXP, SEXP min_r2_lenSEXP) {
+Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame meta, int min_r1_len, int min_r2_len, bool full);
+RcppExport SEXP _loxcoder_decode(SEXP rSEXP, SEXP nameSEXP, SEXP metaSEXP, SEXP min_r1_lenSEXP, SEXP min_r2_lenSEXP, SEXP fullSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -61,7 +74,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::DataFrame >::type meta(metaSEXP);
     Rcpp::traits::input_parameter< int >::type min_r1_len(min_r1_lenSEXP);
     Rcpp::traits::input_parameter< int >::type min_r2_len(min_r2_lenSEXP);
-    rcpp_result_gen = Rcpp::wrap(decode(r, name, meta, min_r1_len, min_r2_len));
+    Rcpp::traits::input_parameter< bool >::type full(fullSEXP);
+    rcpp_result_gen = Rcpp::wrap(decode(r, name, meta, min_r1_len, min_r2_len, full));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -116,6 +130,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// retrieve_dist_origin_single
+int retrieve_dist_origin_single(long long c, int size);
+RcppExport SEXP _loxcoder_retrieve_dist_origin_single(SEXP cSEXP, SEXP sizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< long long >::type c(cSEXP);
+    Rcpp::traits::input_parameter< int >::type size(sizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(retrieve_dist_origin_single(c, size));
+    return rcpp_result_gen;
+END_RCPP
+}
 // retrieve_dist_origin
 std::vector<int> retrieve_dist_origin(std::vector<long long> c, std::vector<int> sizes);
 RcppExport SEXP _loxcoder_retrieve_dist_origin(SEXP cSEXP, SEXP sizesSEXP) {
@@ -153,21 +179,35 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// run_markov
+Rcpp::List run_markov(int n);
+RcppExport SEXP _loxcoder_run_markov(SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(run_markov(n));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_loxcoder_get_cass_vec", (DL_FUNC) &_loxcoder_get_cass_vec, 1},
     {"_loxcoder_is_valid", (DL_FUNC) &_loxcoder_is_valid, 1},
     {"_loxcoder_impute_13_impl", (DL_FUNC) &_loxcoder_impute_13_impl, 1},
     {"_loxcoder_impute_13", (DL_FUNC) &_loxcoder_impute_13, 2},
-    {"_loxcoder_decode", (DL_FUNC) &_loxcoder_decode, 5},
+    {"_loxcoder_min_flip_dist", (DL_FUNC) &_loxcoder_min_flip_dist, 3},
+    {"_loxcoder_decode", (DL_FUNC) &_loxcoder_decode, 6},
     {"_loxcoder_load_origin_files_wrapper", (DL_FUNC) &_loxcoder_load_origin_files_wrapper, 1},
     {"_loxcoder_load_pair_files_wrapper", (DL_FUNC) &_loxcoder_load_pair_files_wrapper, 1},
     {"_loxcoder_load_prob_files_wrapper", (DL_FUNC) &_loxcoder_load_prob_files_wrapper, 1},
     {"_loxcoder_wrapper_fill_tables", (DL_FUNC) &_loxcoder_wrapper_fill_tables, 0},
     {"_loxcoder_pack", (DL_FUNC) &_loxcoder_pack, 2},
+    {"_loxcoder_retrieve_dist_origin_single", (DL_FUNC) &_loxcoder_retrieve_dist_origin_single, 2},
     {"_loxcoder_retrieve_dist_origin", (DL_FUNC) &_loxcoder_retrieve_dist_origin, 2},
     {"_loxcoder_retrieve_prob", (DL_FUNC) &_loxcoder_retrieve_prob, 3},
     {"_loxcoder_retrieve_dist_pair", (DL_FUNC) &_loxcoder_retrieve_dist_pair, 2},
+    {"_loxcoder_run_markov", (DL_FUNC) &_loxcoder_run_markov, 1},
     {NULL, NULL, 0}
 };
 
