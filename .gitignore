@@ -1,6 +1,7 @@
 *.o
 *.so
 *.dll
+*.html
 src/edlib
 src/edlib/*
 .Rproj.user
