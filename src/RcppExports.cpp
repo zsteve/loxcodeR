@@ -180,13 +180,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // run_markov
-Rcpp::List run_markov(int n);
-RcppExport SEXP _loxcoder_run_markov(SEXP nSEXP) {
+Rcpp::List run_markov(int n, Rcpp::List T);
+RcppExport SEXP _loxcoder_run_markov(SEXP nSEXP, SEXP TSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    rcpp_result_gen = Rcpp::wrap(run_markov(n));
+    Rcpp::traits::input_parameter< Rcpp::List >::type T(TSEXP);
+    rcpp_result_gen = Rcpp::wrap(run_markov(n, T));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -207,7 +208,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_loxcoder_retrieve_dist_origin", (DL_FUNC) &_loxcoder_retrieve_dist_origin, 2},
     {"_loxcoder_retrieve_prob", (DL_FUNC) &_loxcoder_retrieve_prob, 3},
     {"_loxcoder_retrieve_dist_pair", (DL_FUNC) &_loxcoder_retrieve_dist_pair, 2},
-    {"_loxcoder_run_markov", (DL_FUNC) &_loxcoder_run_markov, 1},
+    {"_loxcoder_run_markov", (DL_FUNC) &_loxcoder_run_markov, 2},
     {NULL, NULL, 0}
 };
 

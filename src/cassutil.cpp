@@ -9,6 +9,7 @@
 #include <string>
 #include <set>
 #include <sstream>
+#include <climits>
 #include "pack.h"
 #include "dist.h"
 
@@ -201,7 +202,8 @@ std::vector<std::string> impute_13(std::vector<std::string> c, std::vector<int> 
 //'
 std::pair<int, long long> min_flip_dist_single(std::vector<int> c, int size){    
     long long id_min = pack_single(c, get_size_idx(c.size()));
-    int d_min = retrieve_dist_origin_single(id_min, size); 
+//    int d_min = retrieve_dist_origin_single(id_min, size); 
+    int d_min = INT_MAX;
     for(int i = 0; i < c.size(); i++){
         c[i] = -c[i]; // flip sign
         long long id = pack_single(c, get_size_idx(c.size()));

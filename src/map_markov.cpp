@@ -13,11 +13,11 @@
 #include "tables.h"
 
 /* following implementations taken from
- * wehi-project-19/markov 
- **/ 
+ * wehi-project-19/markov
+ **/
 
 void gen_odd_recom(const int* o, int* r, int size_idx){
-  /** 
+  /**
    * o is the starting cassette
    * r will contain the list of output ID's
    * size_idx specifies the size of o
@@ -36,7 +36,7 @@ void gen_odd_recom(const int* o, int* r, int size_idx){
       r[i] = temp[0];
     }else{
       r[i] = pack_odd(temp, rec_size_idx);
-    } 
+    }
   }
 //  cout << "gen_odd exited happily" << endl;
 }
@@ -59,7 +59,7 @@ void gen_even_recom(const int* e, int* r, int size_idx){
     // if(rec_size == 1) continue;
     int rec_size_idx = size_to_size_idx2[rec_size];
     if(rec_size_idx == 5){
-      // do nothing 
+      // do nothing
       r[i] = 0;
     }else{
       r[i] = pack_even(temp, rec_size_idx);
@@ -73,7 +73,7 @@ void gen_sign_recom(const int* s, int* r, int size_idx){
     for(int i = 0; i < rec_counts[size_idx]; i++){
       int* c = sign_rec[size_idx][i];
       for(int j = 0; j < sizes_odd[size_idx] + sizes_even[size_idx]; j++){
-        temp[j] = c[j] < 0 ? s[abs(c[j])-1] ^ 1 : s[abs(c[j])-1]; 
+        temp[j] = c[j] < 0 ? s[abs(c[j])-1] ^ 1 : s[abs(c[j])-1];
       }
       int rec_size = rec_sizes_odd[size_idx][i] + rec_sizes_even[size_idx][i];
       // if(rec_size == 1) continue;
@@ -106,20 +106,35 @@ void get_sign(int* c, int* s, int size_idx){
     }
 }
 
-double tr(int size_idx){
-  return p[size_idx];
+double tr(Rcpp::List& T, int size_idx, int m, int n){
+  Rcpp::NumericMatrix T_ = T[size_idx];
+  return T_(m, n);
 }
 
+
+//' Calculate generation probabilities using Markov chain formulation
+//' 
+//' T specifies the transition probabilities by assigning probabilities to the interactions 
+//' between LoxP sites. T must be a list of length 5 where each entry is a NumericMatrix.
+//' T[[1]] must be a 14x14 matrix where element (i, j) = (j, i) corresponds to the probability 
+//' of interaction between LoxP sites i and j, where LoxP sites are numbered 1-14 (or 0-13) inclusive.
+//' For example, starting from the unrecombined cassette, an interaction (0, 12) yields the 1-element cassette {13}
+//' 
+//' Calculates the generation probability distribution for cassettes
+//' for varying values of n (step number)
+//' @param n number of steps to generate
+//' @param T transition probabilities specified as interaction probabilities
+//' @return list of n+1 items, giving the distribution state at step 0, 1, ..., n.
 //' @export
 // [[Rcpp::export]]
-Rcpp::List run_markov(int n){
+Rcpp::List run_markov(int n, Rcpp::List T){
     // sizes 13, 9, 7, 5, 3, 1
     // std::map of [cassette id:prob]
     // outer std::vector corresponds to step
     // inner std::vector corresponds to size_idx
-    std::vector<std::vector<std::map<long long, double> > > p(n, std::vector<std::map<long long, double> >(6));
+    std::vector<std::vector<std::map<long long, double> > > p(n+1, std::vector<std::map<long long, double> >(6));
     p[0][0][0] = 1;
-    for(int i = 0; i < n-1; i++){
+    for(int i = 0; i < n; i++){
       // i is the previous state
       // i+1 is the next state
       for(int size_idx = 0; size_idx < 5; size_idx++){
@@ -133,7 +148,7 @@ Rcpp::List run_markov(int n){
           gen_odd_recom(o, o_rec, size_idx); gen_even_recom(e, e_rec, size_idx); gen_sign_recom(s, s_rec, size_idx);
 
           for(int j = 0; j < rec_counts[size_idx]; j++){
-            int rec_size_idx = size_to_size_idx2[rec_sizes_odd[size_idx][j] + rec_sizes_even[size_idx][j]]; 
+            int rec_size_idx = size_to_size_idx2[rec_sizes_odd[size_idx][j] + rec_sizes_even[size_idx][j]];
             long long new_cassette;
             if(rec_size_idx == 5){
               // 1-element cassette
@@ -141,12 +156,12 @@ Rcpp::List run_markov(int n){
             }else{
               new_cassette = pack(o_rec[j], e_rec[j], s_rec[j], rec_size_idx);
             }
-            p[i+1][rec_size_idx][new_cassette] += it->second*tr(size_idx);
+            p[i+1][rec_size_idx][new_cassette] += it->second*tr(T, size_idx, pos_rec[size_idx][j][0], pos_rec[size_idx][j][1]);
           }
         }
       }
       // special case of size_idx == 5, we have single element cassettes
-      int size_idx = 5; 
+      int size_idx = 5;
       for(auto it = p[i][size_idx].begin(); it != p[i][size_idx].end(); ++it){
         p[i+1][size_idx][it->first] += it->second;
       }
@@ -165,7 +180,7 @@ Rcpp::List run_markov(int n){
 
     Rcpp::List out = Rcpp::List::create();
 
-    for(int i = 0; i < n; i++){
+    for(int i = 0; i < n+1; i++){
       std::vector<long long> id;
       std::vector<double> prob;
       std::vector<int> size;

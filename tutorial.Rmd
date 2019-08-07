@@ -31,11 +31,11 @@ readxl::read_excel('/home/zsteve/loxcoder/nn128_50k_samples.xlsx')
 We may now use the `load_from_xlsx` function to perform the decoding and preprocessing pipeline for Loxcode barcodes from FASTQ, as follows.
 
 ```{r}
-# x_50k <- loxcoder::load_from_xlsx('NN128_renamed', '/home/zsteve/loxcoder/nn128_50k_samples.xlsx',
-#                          dir='/home/zsteve/ssd_ext/loxcode/renamed/',
-#                          suffix_R1='_R1_001.fastq', suffix_R2='_R2_001.fastq', load = T, full = F)
+x_50k <- loxcoder::load_from_xlsx('NN128_renamed', '/home/zsteve/loxcoder/nn128_50k_samples.xlsx',
+                         dir='/home/zsteve/ssd_ext/loxcode/renamed/',
+                         suffix_R1='_R1_001.fastq', suffix_R2='_R2_001.fastq', load = T, full = F)
 
-load('/home/zsteve/loxcoder/nn128_50k.RData')
+#load('/home/zsteve/loxcoder/nn128_50k.RData')
 ```
 
 The resulting `loxcode_experiment` object thus contains a number of slots. Importantly, we can view and modify the sample table
@@ -80,7 +80,8 @@ grid.arrange(loxcoder::size_plot(loxcoder::sample(x_merged, 'samp_1_pulse_1')),
 ```
 
 ```{r}
-t <- loxcoder::get_data(x_50k, '50k_1_1__A')
+everything <- loxcoder::merge_by(x_50k, 'min_r1_len')
+t <- loxcoder::get_valid(everything, '300')
 out <- loxcoder::min_flip_dist(t$code, t$size, t$is_valid)
 t <- cbind(t, out)
 t$diff <- ifelse(t$is_valid, t$d_min - t$dist_orig, NA)

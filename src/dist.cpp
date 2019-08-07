@@ -235,7 +235,10 @@ std::vector<long long> pack(SEXP c, std::vector<bool> v){
 //' @export
 // [[Rcpp::export]]
 int retrieve_dist_origin_single(long long c, int size){
-    return (int)distmaps::read_origin(c, get_size_idx(size))-1;
+  if(!distmaps::initialised){
+     Rcpp::stop("Not initialised");
+  }
+  return (int)distmaps::read_origin(c, get_size_idx(size))-1;
 }
 
 //' @export

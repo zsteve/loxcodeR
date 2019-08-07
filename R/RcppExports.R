@@ -102,8 +102,21 @@ retrieve_dist_pair <- function(c1, c2) {
     .Call(`_loxcoder_retrieve_dist_pair`, c1, c2)
 }
 
+#' Calculate generation probabilities using Markov chain formulation
+#' 
+#' T specifies the transition probabilities by assigning probabilities to the interactions 
+#' between LoxP sites. T must be a list of length 5 where each entry is a NumericMatrix.
+#' T[[1]] must be a 14x14 matrix where element (i, j) = (j, i) corresponds to the probability 
+#' of interaction between LoxP sites i and j, where LoxP sites are numbered 1-14 (or 0-13) inclusive.
+#' For example, starting from the unrecombined cassette, an interaction (0, 12) yields the 1-element cassette {13}
+#' 
+#' Calculates the generation probability distribution for cassettes
+#' for varying values of n (step number)
+#' @param n number of steps to generate
+#' @param T transition probabilities specified as interaction probabilities
+#' @return list of n+1 items, giving the distribution state at step 0, 1, ..., n.
 #' @export
-run_markov <- function(n) {
-    .Call(`_loxcoder_run_markov`, n)
+run_markov <- function(n, T) {
+    .Call(`_loxcoder_run_markov`, n, T)
 }
 
