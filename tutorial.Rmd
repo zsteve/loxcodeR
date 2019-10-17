@@ -33,7 +33,7 @@ We may now use the `load_from_xlsx` function to perform the decoding and preproc
 ```{r}
 x_50k <- loxcoder::load_from_xlsx('NN128_renamed', '/home/zsteve/loxcoder/nn128_50k_samples.xlsx',
                          dir='/home/zsteve/ssd_ext/loxcode/renamed/',
-                         suffix_R1='_R1_001.fastq', suffix_R2='_R2_001.fastq', load = T, full = F)
+                         suffix_R1='_R1_001.fastq', suffix_R2='_R2_001.fastq', load = T, full = F, sat = T)
 
 #load('/home/zsteve/loxcoder/nn128_50k.RData')
 ```

@@ -103,12 +103,13 @@ std::vector<string> Consensus(vector<string> a, vector<string> b)
 //' @param r Paths of R1, 2 respectively
 //' @param meta User-defined data-frame for sample metadata
 //' @param min_read_length min read length for R1, R2 filter respectively
-//' @param full whether to supply full output (including read IDs, etc) 
+//' @param full whether to supply full output (including read IDs, etc)
+//' @param saturation whether to keep saturation information
 //' @return S4 loxcode_sample object with decoded results
 //' @export
 // [[Rcpp::export]]
 Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame meta,
-                int min_r1_len, int min_r2_len, bool full){
+                int min_r1_len, int min_r2_len, bool full, bool sat){
   ifstream fileR1(r[0]); ifstream fileR2(r[1]); // input files
   int counter=0;
   /*
@@ -183,7 +184,7 @@ Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame me
     // TODO:  fix this so that stage1 only takes care of matching
     // at the moment we discard if not enough elts are matched
     //
-    map<int,int> locs={{0,14},{48,8},{90,14},{138,8},{180,14},{228,8} ,{270,14} /*,{318,8}*/};
+    map<int,int> locs={{0,14},{48,8},{90,14},{138,8},{180,14},{228,8} ,{270,14} ,{318,8}};
 
     bool discard=false, discard_R1=false, discard_R2=false;
     vector<string> loxcode_R1, loxcode_R2;
@@ -259,7 +260,7 @@ Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame me
           if(full) reads_consensus_filtered_data.push_back(std::vector<std::string>({r1_str, r2_str}));
           reads_consensus_filtered++;
        }
-       if(full) saturation.push_back(keep);
+       if(sat) saturation.push_back(code_readout.size());
     }
 
   }
@@ -267,7 +268,7 @@ Rcpp::S4 decode(std::vector<std::string> r, std::string name, Rcpp::DataFrame me
   std::vector<int> output_code_sizes; output_code_sizes.reserve(code_readout.size());
   std::vector<string> output_code_readout; output_code_readout.reserve(code_readout.size());
   std::vector<int> output_code_counts; output_code_counts.reserve(code_readout.size());
-  std::vector<std::vector<int> > output_code_readids; 
+  std::vector<std::vector<int> > output_code_readids;
   if(full) output_code_readids.reserve(code_readout.size());
   for(auto c : code_readout){
       output_code_readout.push_back("");

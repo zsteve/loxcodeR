@@ -41,14 +41,14 @@ loxcode_experiment <- setClass(
 #' @export
 setGeneric("load_samples", function(x, ...) {standardGeneric("load_samples")})
 
-setMethod("load_samples", "loxcode_experiment", function(x, full = F){
+setMethod("load_samples", "loxcode_experiment", function(x, full = F, sat = F){
     x@samples <- lapply(names(x@samples), function(z){
     print(z)
     samp_table_sliced <- x@samp_table[match(z, x@samp_table$sample), ]
     out <- loxcoder::decode(c(paste0(x@dir, x@samples[[z]], x@suffix_R1), paste0(x@dir, x@samples[[z]], x@suffix_R2)),
                        name = z, meta = samp_table_sliced$meta,
                      min_r1_len = samp_table_sliced$min_r1_len,
-                     min_r2_len = samp_table_sliced$min_r2_len, full = full)
+                     min_r2_len = samp_table_sliced$min_r2_len, full = full, sat = sat)
     out <- loxcoder::impute(out)
     out <- loxcoder::validate(out)
     out <- loxcoder::makeid(out)
@@ -182,16 +182,25 @@ setMethod("samptable<-", "loxcode_experiment", function(x, value){
 #' @param suffix_R2 string, R2 suffix
 #' @param load boolean, whether to load samples or not (default is TRUE)
 #' @param full boolean, whether to produce full debugging output (default is FALSE, this uses significantly more memory)
+#' @param sat boolean, whether to keep saturation info
 #' @return loxcode_experiment object
 #' @export
-load_from_xlsx <- function(name, s, dir, suffix_R1, suffix_R2, load = TRUE, full = FALSE){
+load_from_xlsx <- function(name, s, dir, suffix_R1, suffix_R2, load = TRUE, full = FALSE, sat = FALSE){
   x <- new("loxcode_experiment", name = name, dir = dir, suffix_R1 = suffix_R1, suffix_R2 = suffix_R2)
   x@samp_table <- data.frame(read_excel(s))
   x@samples = lapply(x@samp_table$prefix, function(z) z)
   names(x@samples) <- x@samp_table$sample
   if(load){
-    x <- loxcoder::load_samples(x, full = full)
+    x <- loxcoder::load_samples(x, full = full, sat = sat)
   }
+  return(x)
+}
+
+# Same as load_from_xlsx but now the parameters
+# s, dir, suffix_R1, suffix_R2
+# are lists
+load_from_xlsx_multi <- function(name, s, dir, suffix_R1, suffix_R2, load = TRUE, full = FALSE, sat = FALSE){
+  x <- new("loxcode_experiment", name = name, dir = dir, suffix_R1 = suffix_R1, suffix_R2 = suffix_R2)
   return(x)
 }
 
